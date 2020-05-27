@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/insert_quantity"
+        android:textSize="20sp"
+        android:layout_marginTop="30dp"
+        android:textAlignment="center"/>
+
+    <EditText
+        android:id="@+id/edit_text_balance"
+        android:layout_width="130dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="90dp"
+        android:textAlignment="center"/>
+
+    <Button
+        android:id="@+id/btn_credit_card_reload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/rounded_button"
+        android:textColor="@android:color/white"
+        android:text="@string/reload"
+        android:textSize="17sp"/>
+</LinearLayout>

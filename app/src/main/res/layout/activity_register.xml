@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="50dp"
+        android:paddingLeft="35dp">
+
+        <EditText
+            android:id="@+id/edit_text_register_user"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/usuario"
+            android:textSize="20sp"
+            android:layout_marginBottom="30dp"
+            android:inputType="textCapSentences"/>
+        <EditText
+            android:id="@+id/edit_text_register_password"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/password"
+            android:textSize="20sp"
+            android:inputType="textPassword"
+            android:layout_marginBottom="30dp"/>
+        <EditText
+            android:id="@+id/edit_text_register_repeat_password"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/password_again"
+            android:textSize="20sp"
+            android:inputType="textPassword"
+            android:layout_marginBottom="30dp"/>
+        <EditText
+            android:id="@+id/edit_text_register_email"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/email"
+            android:textSize="20sp"
+            android:layout_marginBottom="30dp"
+            android:inputType="textEmailAddress"/>
+        <EditText
+            android:id="@+id/edit_text_register_phone"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/phone"
+            android:textSize="20sp"
+            android:inputType="phone"
+            android:layout_marginBottom="30dp"/>
+
+        <TextView
+            android:id="@+id/text_view_register_date"
+            android:layout_width="300dp"
+            android:layout_height="50dp"/>
+
+        <ImageButton
+            android:id="@+id/button_date_picker"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_date"
+            android:background="@android:color/white"/>
+        <!--<EditText
+            android:id="@+id/edit_text_register_date"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:hint="@string/phone"
+            android:textSize="20sp"
+            android:inputType="date"
+            android:layout_marginBottom="30dp"/>-->
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/terms"
+            android:layout_marginBottom="30dp"
+            android:checked="true"/>
+        <Button
+            android:id="@+id/btn_register"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:background="@drawable/rounded_button"
+            android:text="@string/sign_up"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"/>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

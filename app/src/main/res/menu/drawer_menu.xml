@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_home"
+            android:title="@string/main"
+            android:icon="@drawable/home"/>
+        <item android:id="@+id/nav_trip"
+            android:title="@string/trip"
+            android:icon="@drawable/ic_bus"/>
+        <item android:id="@+id/nav_cards"
+            android:title="@string/cards"
+            android:icon="@drawable/ic_card"/>
+        <item android:id="@+id/nav_sales"
+            android:title="@string/sales"
+            android:icon="@drawable/ic_sales_point"/>
+        <item android:id="@+id/nav_gap_fare"
+            android:title="@string/gap_fare"
+            android:icon="@drawable/ic_gap"/>
+        <item android:id="@+id/nav_places"
+            android:title="@string/interest"
+            android:icon="@drawable/ic_interesting_places"/>
+        <item android:id="@+id/nav_log"
+            android:title="@string/me"
+            android:icon="@drawable/ic_logging"/>
+        <item android:id="@+id/nav_sign_up"
+            android:title="@string/sign_up"
+            android:icon="@drawable/ic_logging"/>
+        <!--<item android:id="@+id/nav_settings"
+            android:title="@string/settings"
+            android:icon="@drawable/ic_settings"/>-->
+    </group>
+</menu>
