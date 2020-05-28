@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.proyecto.tucca">
+    package="com.proyecto.transportesbahiacadiz">
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />-->
@@ -53,16 +54,16 @@
             android:required="false" />
 
         <activity
-            android:name=".activities.StopsActivity"
+            android:name="com.proyecto.transportesbahiacadiz.activities.StopsActivity"
             android:theme="@style/AppTheme" />
-        <activity android:name=".activities.PayActivity" />
+        <activity android:name="com.proyecto.transportesbahiacadiz.activities.PayActivity" />
         <activity
-            android:name=".activities.MenuActivity"
+            android:name="com.proyecto.transportesbahiacadiz.activities.MenuActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".activities.NewCreditCardActivity" />
-        <activity android:name=".activities.CreditCardActivity" />
+        <activity android:name="com.proyecto.transportesbahiacadiz.activities.NewCreditCardActivity" />
+        <activity android:name="com.proyecto.transportesbahiacadiz.activities.CreditCardActivity" />
         <activity
-            android:name=".activities.MainActivity"
+            android:name="com.proyecto.transportesbahiacadiz.activities.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -74,11 +75,22 @@
                 android:value="@string/google_maps_key"/>-->
         </activity>
         <activity
-            android:name=".activities.RegisterActivity"
+            android:name="com.proyecto.transportesbahiacadiz.activities.RegisterActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".activities.AddCardActivity"
+            android:name="com.proyecto.transportesbahiacadiz.activities.AddCardActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/providers_path" />
+        </provider>
+
     </application>
 
 </manifest>
