@@ -42,10 +42,11 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
     public static final String PREFERENCE_STATUS = "estado.button.sesion";
     private DrawerLayout drawerLayout;
     private ImageView userImage;
-    private static final int CAMERA_REQUEST = 1888;
+    private int id;
+    /*private static final int CAMERA_REQUEST = 1888;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
     public static final int PICK_IMAGE = 1;
-    public static final int GALLERY = 200;
+    public static final int GALLERY = 200;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +82,16 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 newString= null;
             } else {
                 newString= extras.getString("nombre");
+                id = extras.getInt("id");
+                if (newString == null || id == 0){
+                    double bs = extras.getDouble("pagar");
+                    //newString= extras.getString("pagar");
+                    Bundle bundle = new Bundle();
+                    bundle.putDouble("pagar", bs);
+                    CardsFragment cardsFragment = new CardsFragment();
+                    cardsFragment.setArguments(bundle);
+                    new TaskCambiarFragment().execute(cardsFragment);
+                }
                 System.out.println(newString);
                 View headView = navigationView.getHeaderView(0);
                 TextView textView = headView.findViewById(R.id.text_view_name);
@@ -115,17 +126,20 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
             newDatos = datos.split("¬");
             usuario = new Usuario();
             //System.out.println(datos);
-            if(newDatos.length == 6) {
-                usuario.setNombre(newDatos[0]);
-                usuario.setCorreo(newDatos[2]);
-                usuario.setFecha_nac(newDatos[3]);
-                usuario.setTfno(Integer.parseInt(newDatos[4]));
+            if(newDatos.length == 7) {
+                usuario.setId(Integer.parseInt(newDatos[0]));
+                usuario.setNombre(newDatos[1]);
+                usuario.setCorreo(newDatos[3]);
+                usuario.setFecha_nac(newDatos[4]);
+                usuario.setTfno(Integer.parseInt(newDatos[5]));
+                //usuario.setImagen(newDatos[6]);
                 //usuario.setImagen(newDatos[5]);
             }else{
-                usuario.setNombre(newDatos[0]);
-                usuario.setCorreo(newDatos[2]);
-                usuario.setFecha_nac(newDatos[3]);
-                usuario.setTfno(Integer.parseInt(newDatos[4]));
+                usuario.setId(Integer.parseInt(newDatos[0]));
+                usuario.setNombre(newDatos[1]);
+                usuario.setCorreo(newDatos[3]);
+                usuario.setFecha_nac(newDatos[4]);
+                usuario.setTfno(Integer.parseInt(newDatos[5]));
             }
         }catch (Exception e){
             e.printStackTrace();

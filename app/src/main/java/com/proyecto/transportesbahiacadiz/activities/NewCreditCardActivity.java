@@ -70,14 +70,15 @@ public class NewCreditCardActivity extends AppCompatActivity {
                 try {
                     dataOut.writeUTF("ntarjeta");
                     dataOut.flush();
+                    System.out.println(usuario.getId());
                     dataOut.writeUTF(scanResult.getRedactedCardNumber() + "-" + usuario.getId() + "-" + editTextCaducidad.getText() + "-"
                     + editTextTitular.getText());
                     dataOut.flush();
                     String estado = dataIn.readUTF();
-                    System.out.println(estado);
+                    //System.out.println(estado);
                     if(estado.equalsIgnoreCase("correcto")){
                         new AlertDialog.Builder(this)
-                                .setTitle("Correcto")
+                                .setTitle(R.string.correct)
                                 .setMessage("Se ha ingresado una nueva tarjeta")
                                 .show();
                     }else {

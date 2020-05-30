@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.proyecto.transportesbahiacadiz.activities.MenuActivity;
 import com.proyecto.transportesbahiacadiz.dialogs.CardDialog;
 import com.proyecto.transportesbahiacadiz.model.CardItem;
 import com.proyecto.transportesbahiacadiz.adapters.CardsAdapter;
@@ -43,6 +44,7 @@ public class CardsFragment extends Fragment {
     private int size;
     private String[] newDatos;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private double bs;
 
     public CardsFragment() {
     }
@@ -51,6 +53,10 @@ public class CardsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_cards, container, false);
+        if(getArguments() != null){
+            bs = getArguments().getDouble("pagar");
+            System.out.println(bs);
+        }
         swipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         cardItemList = new ArrayList<CardItem>();
         try {
@@ -204,6 +210,8 @@ public class CardsFragment extends Fragment {
     }
 
     private void showDialog() {
-        new CardDialog().show(getFragmentManager(), "Card Dialog");
+        CardDialog cardDialog = new CardDialog();
+        cardDialog.setBs(bs);
+        cardDialog.show(getFragmentManager(), "Card Dialog");
     }
 }

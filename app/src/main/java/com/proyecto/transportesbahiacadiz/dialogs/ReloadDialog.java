@@ -48,13 +48,13 @@ public class ReloadDialog extends DialogFragment {
                 try {
                     dataOut.writeUTF("rtarjeta");
                     dataOut.flush();
-                    dataOut.writeInt(Integer.parseInt(editText.getText().toString()));
+                    dataOut.writeDouble(Double.parseDouble(editText.getText().toString()));
                     dataOut.flush();
+                    System.out.println(message);
                     dataOut.writeUTF(message);
                     dataOut.flush();
                     String estado = dataIn.readUTF();
                     if(estado.equalsIgnoreCase("correcto")) {
-                        dismiss();
                         new AlertDialog.Builder(getContext())
                                 .setTitle(R.string.correct)
                                 .show();

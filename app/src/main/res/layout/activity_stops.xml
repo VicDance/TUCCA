@@ -7,7 +7,7 @@
     tools:context=".activities.StopsActivity"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,9 +30,21 @@
                 android:layout_marginBottom="20dp">
             </TableLayout>
         </HorizontalScrollView>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+    <Button
+        android:id="@+id/pay"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="@string/pay"
+        android:textSize="20sp"
+        android:layout_alignBottom="@id/scroll_view"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/rounded_button"
+        android:textColor="@android:color/white"/>
     
     <TextView
+        android:id="@+id/text_view_no_trip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"

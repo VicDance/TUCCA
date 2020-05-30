@@ -16,7 +16,8 @@ import java.util.Random;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.idCliente;
+import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
+//import static com.proyecto.transportesbahiacadiz.activities.MainActivity.idCliente;
 
 public class AddCardActivity extends AppCompatActivity {
     private TextView textViewDailyCard;
@@ -46,7 +47,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.flush();
                                     long numTarjeta = rnd.nextLong();
                                     //System.out.println(dig13);
-                                    dataOut.writeUTF(numTarjeta + "/" + idCliente);
+                                    dataOut.writeUTF(numTarjeta + "/" + usuario.getId());
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){
@@ -88,7 +89,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.writeUTF("tarjeta_ju");
                                     dataOut.flush();
                                     long numTarjeta = rnd.nextLong();
-                                    dataOut.writeUTF(numTarjeta + "/" + idCliente);
+                                    dataOut.writeUTF(numTarjeta + "/" + usuario.getId());
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){
@@ -136,7 +137,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.flush();
                                     long numTarjeta = rnd.nextLong();
                                     //System.out.println(dig13);
-                                    dataOut.writeUTF(numTarjeta + "/" + idCliente);
+                                    dataOut.writeUTF(numTarjeta + "/" + usuario.getId());
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){

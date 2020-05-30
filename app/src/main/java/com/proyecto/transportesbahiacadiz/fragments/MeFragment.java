@@ -74,7 +74,7 @@ public class MeFragment extends Fragment {
     private String nombre;
     private String contraseña;
     private String correo;
-    private String tfno;
+    private int tfno;
     private String fecha_nac;
     private String[] newDatos;
     private int id;
@@ -361,13 +361,14 @@ public class MeFragment extends Fragment {
             datos = dataIn.readUTF();
             newDatos = datos.split("¬");
             usuario = new Usuario();
-            if (newDatos.length == 6) {
-                System.out.println("entra");
-                usuario.setNombre(newDatos[0]);
-                usuario.setCorreo(newDatos[2]);
-                usuario.setFecha_nac(newDatos[3]);
-                usuario.setTfno(Integer.parseInt(newDatos[4]));
-                usuario.setImagen(newDatos[5]);
+            if (newDatos.length == 7) {
+                //System.out.println("entra");
+                usuario.setId(Integer.parseInt(newDatos[0]));
+                usuario.setNombre(newDatos[1]);
+                usuario.setCorreo(newDatos[3]);
+                usuario.setFecha_nac(newDatos[4]);
+                usuario.setTfno(Integer.parseInt(newDatos[5]));
+                usuario.setImagen(newDatos[6]);
                 //System.out.println(newDatos[5]);
                 /*Uri uri = Uri.parse(usuario.getImagen());
                 imageViewUser.setImageURI(uri);*/
@@ -380,21 +381,22 @@ public class MeFragment extends Fragment {
                 Uri uri = Uri.parse(usuario.getImagen());
                 imageViewUser.setImageURI(uri);*/
             } else {
-                usuario.setNombre(newDatos[0]);
-                usuario.setCorreo(newDatos[2]);
-                usuario.setFecha_nac(newDatos[3]);
-                usuario.setTfno(Integer.parseInt(newDatos[4]));
+                usuario.setId(Integer.parseInt(newDatos[0]));
+                usuario.setNombre(newDatos[1]);
+                usuario.setCorreo(newDatos[3]);
+                usuario.setFecha_nac(newDatos[4]);
+                usuario.setTfno(Integer.parseInt(newDatos[5]));
             }
-            nombre = newDatos[0];
+            nombre = usuario.getNombre();
             contraseña = newDatos[1];
-            correo = newDatos[2];
-            fecha_nac = newDatos[3];
-            tfno = newDatos[4];
+            correo = usuario.getCorreo();
+            fecha_nac = usuario.getFecha_nac();
+            tfno = usuario.getTfno();
 
             textViewUser.setText(nombre);
             textViewBorn.setText(fecha_nac);
             textViewEmail.setText(correo);
-            textViewPhone.setText(tfno);
+            textViewPhone.setText(tfno + "");
         } catch (IOException e) {
             e.printStackTrace();
         }

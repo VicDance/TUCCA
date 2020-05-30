@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 
 import com.proyecto.transportesbahiacadiz.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.Settings;
 import com.proyecto.transportesbahiacadiz.model.Fare;
 import com.proyecto.transportesbahiacadiz.model.FareList;
 
@@ -26,6 +27,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.proyecto.transportesbahiacadiz.Settings.saltos_billete;
+
 public class FareFragment extends Fragment {
     private View view;
     private TableLayout tableLayout;
@@ -34,6 +37,7 @@ public class FareFragment extends Fragment {
     private Fare[] fares;
     private TableLayout.LayoutParams layoutParams;
     private List<String> lista;
+    Settings settings = new Settings();
 
     public static final double DESCUENTO_ESTU = 0.7;
     public static final double DESCUENTO_JU = 0.5;
@@ -43,7 +47,11 @@ public class FareFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_fare, container, false);
         tableLayout = view.findViewById(R.id.tlGridTable);
-        cogeDatosAPI();
+        if(saltos_billete.isEmpty()) {
+            cogeDatosAPI();
+        }else{
+            //TODO 2- Crear metodo para crear columnas sin recurrir a array fare
+        }
         return view;
     }
 
@@ -64,6 +72,7 @@ public class FareFragment extends Fragment {
             tableRow = new TableRow(getContext());
             TableRow.LayoutParams lp = new TableRow.LayoutParams(100, ViewGroup.LayoutParams.WRAP_CONTENT);
             tableRow.setLayoutParams(lp);
+            saltos_billete.put(fares[i].getSaltos(), fares[i].getBs());
             for(int j = 0; j < columnas.length; j++){
                 TextView textView = new TextView(getContext());
                 switch (j){
@@ -106,7 +115,6 @@ public class FareFragment extends Fragment {
                 }
                 FareList fareList = response.body();
                 fares = new Fare[fareList.getFareList().size()];
-                lista = new ArrayList<String>();
                 for (int i = 0; i < fareList.getFareList().size(); i++) {
                     fares[i] = fareList.getFareList().get(i);
                 }

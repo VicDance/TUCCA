@@ -1,9 +1,15 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.Session2CommandGroup;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,14 +17,17 @@ import android.os.StrictMode;
 import android.util.MonthDisplayHelper;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.proyecto.transportesbahiacadiz.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.fragments.CardsFragment;
 import com.proyecto.transportesbahiacadiz.model.Horario;
 import com.proyecto.transportesbahiacadiz.model.HorarioList;
 import com.proyecto.transportesbahiacadiz.model.Segment;
@@ -37,12 +46,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
+import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 
 public class StopsActivity extends AppCompatActivity {
     private int nucleoOrigen;
     private int nucleoDestino;
     private int ciudadOrigen;
     private int ciudadDestino;
+    private double bs;
     private String destino;
     private String origen;
     private Horario[] listaHorarios;
@@ -54,6 +65,8 @@ public class StopsActivity extends AppCompatActivity {
     Stop[] paradas;
     int length;
     String nombreLinea = "";
+
+    private Button btnPay;
 
     public StopsActivity() {
     }
@@ -75,17 +88,36 @@ public class StopsActivity extends AppCompatActivity {
             nucleoDestino = extras.getInt("nucleoDestino");
             origen = extras.getString("nombreNucleoOrigen");
             destino = extras.getString("nombreNucleoDestino");
+            bs = extras.getDouble("precio");
             /*System.out.println("Municipio: " + ciudadOrigen + "\n" + "Nucleo: " + nucleoOrigen);
             System.out.println("Municipio: " + ciudadDestino + "\n" + "Nucleo: " + nucleoDestino);*/
         }
         tableLayout = findViewById(R.id.tlGridTable);
+        btnPay = findViewById(R.id.pay);
+        if(!login){
+            btnPay.setVisibility(View.INVISIBLE);
+        }
+        btnPay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(StopsActivity.this, "Click", Toast.LENGTH_SHORT).show();
+                /*if (saldo <= 0) {
+                    new AlertDialog.Builder(StopsActivity.this)
+                            .setTitle(R.string.attention)
+                            .setMessage(R.string.no_money)
+                            .show();
+                } else {
+                    new AlertDialog.Builder(StopsActivity.this)
+                            .setTitle(R.string.attention)
+                            .setMessage(R.string.payment_instruction)
+                            .show();
+                    compruebaPosicion();
+                }*/
+                //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CardsFragment()).commit();
+                startActivity(new Intent(StopsActivity.this, MenuActivity.class).putExtra("pagar", bs));
+            }
+        });
 
-        /*for(int i = 0; i < 4; i++){
-
-
-            tableLayout.addView(tableRow);
-        }*/
-        //final TableView<String[]> tableView = findViewById(R.id.table_view);
         try {
             dataOut.writeUTF("paradas_viaje");
             dataOut.flush();
@@ -115,27 +147,9 @@ public class StopsActivity extends AppCompatActivity {
                 }
                 //System.out.println("Linea " + linea + " parada " + paradas[0]);
             }
-            //System.out.println(nombreLinea);
-
-            /*for(int i = 0; i < stopList.size(); i++){
-                System.out.println(stopList.get(i));
-            }*/
 
             listarBloques(nucleoDestino, nucleoOrigen);
             listarHorarios(nucleoDestino, nucleoOrigen);
-            /*for(int x = 0; x < tableRow.length; x++){
-                for(int y = 0; y < tableRow[x].length; y++){
-                    System.out.println(tableRow[x][y]);
-                }
-            }*/
-            /*tableView.setDataAdapter(new SimpleTableDataAdapter(this, tableRow));
-
-            tableView.addDataClickListener(new TableDataClickListener() {
-                @Override
-                public void onDataClicked(int rowIndex, Object clickedData) {
-                    Toast.makeText(StopsActivity.this, ((String[])clickedData)[1], Toast.LENGTH_SHORT).show();
-                }
-            });*/
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -145,9 +159,6 @@ public class StopsActivity extends AppCompatActivity {
     private void creaCabecera() {
         TableRow cabecera = new TableRow(this);
         length = tableHeader.length;
-        /*LinearLayout linearLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
-        linearLayout.setLayoutParams(llp);*/
         for (int i = 0; i < tableHeader.length; i++) {
             TableRow.LayoutParams lp = new TableRow.LayoutParams(100, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = 20;
@@ -160,8 +171,6 @@ public class StopsActivity extends AppCompatActivity {
             textView.setBackgroundColor(Color.rgb(95, 173, 250));
             cabecera.addView(textView);
         }
-        //tableLayout.addView(linearLayout);
-        //tableLayout.setColumnStretchable(2, true);
         tableLayout.addView(cabecera);
 
         TableRow separador_cabecera = new TableRow(this);
@@ -194,49 +203,28 @@ public class StopsActivity extends AppCompatActivity {
                         System.out.println(lineas[z]);
                         if (x == 0) {
                             textView.setText(listaHorarios[i].getNameLinea());
-                        } else if (/*x == tableHeader.length - 1*/tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
+                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
                             textView.setText(listaHorarios[i].getObservaciones());
-                            if (x > 0 && x < (tableHeader.length - 2) /*&& (cont < tableHeader.length-3)*/) {
-                                //for(int y = 0; y < listaHorarios[i].getHoras().size(); y++) {
+                            if (x > 0 && x < (tableHeader.length - 2)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
-                                //System.out.println(listaHorarios[i].getHoras().get(i));
-                                //}
                                 cont++;
                                 if (cont == tableHeader.length - 3) {
                                     cont = 0;
                                 }
                             }
-                        } else if (/*x == tableHeader.length - 2*/tableHeader[tableHeader.length-1].equalsIgnoreCase("frecuencia")) {
+                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("frecuencia")) {
                             textView.setText(listaHorarios[i].getDias());
-                            System.out.println("entra frecuencia");
-                            if (x > 0 && x < (tableHeader.length - 1) /*&& (cont < tableHeader.length-3)*/) {
-                                //for(int y = 0; y < listaHorarios[i].getHoras().size(); y++) {
+                            //System.out.println("entra frecuencia");
+                            if (x > 0 && x < (tableHeader.length - 1)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
-                                //System.out.println(listaHorarios[i].getHoras().get(i));
-                                //}
                                 cont++;
                                 if (cont == tableHeader.length - 2) {
                                     cont = 0;
                                 }
                             }
-                        } /*else if (x > 0 && x < (tableHeader.length - 2) ) {
-                            //for(int y = 0; y < listaHorarios[i].getHoras().size(); y++) {
-                            textView.setText(listaHorarios[i].getHoras().get(cont));
-                            //System.out.println(listaHorarios[i].getHoras().get(i));
-                            //}
-                            cont++;
-                            if (cont == tableHeader.length - 3) {
-                                cont = 0;
-                            }
-                        }*/
-
-                    /*for(int y = 1; y < tableHeader.length-2; y++){
-                        System.out.println("entra");
-                        textView.setText("hora");
-                    }*/
+                        }
                         textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
                         textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                        //tableRow.addView(linearLayout);
                         tableRow.addView(textView);
 
                         separador_cabecera = new TableRow(this);
@@ -251,30 +239,10 @@ public class StopsActivity extends AppCompatActivity {
                         tableLayout.addView(separador_cabecera);
                     }
                 }
-                //cont++;
             }
             tableLayout.addView(tableRow);
-            //tableLayout.setColumnCollapsed(1, true);
-            //tableLayout.addView(separador_cabecera);
         }
-        //tableLayout.addView(tableRow);
     }
-    /*private void populateData(String[] paradas, int paradasSize, String linea){
-        Stop stop;
-        for(int i = 0; i < paradasSize; i++){
-            stop = new Stop();
-            stop.setNombre(paradas[2]);
-            stop.setLatitud(paradas[3]);
-            stop.setLongitud(paradas[4]);
-            stopList.add(stop);
-        }
-        tableRow = new String[stopList.size()][tableHeader.length];
-
-        for(int x = 0; x < stopList.size(); x++){
-            tableRow[x][0] = linea;
-            tableRow[x][1] = stopList.get(x).getNombre();
-        }
-    }*/
 
     public void listarHorarios(int idNucleoDestino, int idNucleoOrigen) {
         if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -302,12 +270,12 @@ public class StopsActivity extends AppCompatActivity {
                 String cadena = "";
                 for (int i = 0; i < horarioList.getHorarioList().size(); i++) {
                     listaHorarios[i] = horarioList.getHorarioList().get(i);
-                    System.out.println(horarioList.getHorarioList().get(i) + "\n");
+                    //System.out.println(horarioList.getHorarioList().get(i) + "\n");
                 }
                 if(nombreLinea == null || nombreLinea.equalsIgnoreCase("")){
                     for(int i = 0; i < listaHorarios.length; i++) {
                         nombreLinea += listaHorarios[i].getNameLinea();
-                        System.out.println(nombreLinea);
+                        //System.out.println(nombreLinea);
                     }
                 }
                 creaTabla();
@@ -343,6 +311,8 @@ public class StopsActivity extends AppCompatActivity {
                     System.out.println(response.message());
                     return;
                 }
+                TextView textViewNoTrip = findViewById(R.id.text_view_no_trip);
+                textViewNoTrip.setVisibility(View.INVISIBLE);
                 SegmentList segmentList = response.body();
                 listaSegments = new Segment[segmentList.getSegmentList().size()];
                 //System.out.println(listaHorarios.length);

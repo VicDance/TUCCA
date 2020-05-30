@@ -30,18 +30,33 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.proyecto.transportesbahiacadiz.FareSystemAPI;
+import com.proyecto.transportesbahiacadiz.Settings;
 import com.proyecto.transportesbahiacadiz.activities.StopsActivity;
 import com.proyecto.transportesbahiacadiz.model.Centre;
 import com.proyecto.transportesbahiacadiz.model.City;
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.model.Fare;
+import com.proyecto.transportesbahiacadiz.model.FareList;
+import com.proyecto.transportesbahiacadiz.model.Gap;
+import com.proyecto.transportesbahiacadiz.model.GapList;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCity;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import static com.proyecto.transportesbahiacadiz.Settings.saltos;
+import static com.proyecto.transportesbahiacadiz.Settings.saltos_billete;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
@@ -76,6 +91,12 @@ public class TripFragment extends Fragment {
     int idNucleoDestino;
     String nucleoOrigen;
     String nucleoDestino;
+    String zonaDestino;
+    String zonaOrigen;
+    private Fare[] fares;
+    private Gap[] gaps;
+    private int saltos;
+    private double bs;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Nullable
@@ -93,7 +114,8 @@ public class TripFragment extends Fragment {
                         .putExtra("nucleoOrigen", idNucleoOrigen)
                         .putExtra("nucleoDestino", idNucleoDestino)
                         .putExtra("nombreNucleoOrigen", nucleoOrigen)
-                        .putExtra("nombreNucleoDestino", nucleoDestino));
+                        .putExtra("nombreNucleoDestino", nucleoDestino)
+                        .putExtra("precio", bs));
             }
         });
         //btnPay = view.findViewById(R.id.btn_pay_trip);
@@ -214,14 +236,6 @@ public class TripFragment extends Fragment {
         });
     }
 
-    private void displayCityInfo(City city) {
-        long id = city.getIdMunicipio();
-        String name = city.getNombreMunicipio();
-
-        String data = "Id: " + id + ". Nombre: " + name;
-        Toast.makeText(getContext(), data, Toast.LENGTH_SHORT).show();
-    }
-
     private void listarNucleos(int idMunicipio) {
         int contNucleos = 0;
         try {
@@ -272,6 +286,7 @@ public class TripFragment extends Fragment {
                 for (int i = 0; i < listaNucleos.length; i++) {
                     if (nucleoOrigen.equalsIgnoreCase(listaNucleos[i].getNombreNucleo())) {
                         idNucleoOrigen = listaNucleos[i].getIdNucleo();
+                        zonaOrigen = listaNucleos[i].getIdZona();
                         break;
                     }
                 }
@@ -292,59 +307,7 @@ public class TripFragment extends Fragment {
 
             }
         });
-        //liveDataCentre.getCentreList();
-        /*liveDataCentre.getCentreList().observe((LifecycleOwner) getContext(), new Observer<List<Centre>>() {
-            @Override
-            public void onChanged(List<Centre> centres) {
-                for (Centre centre : centres) {
-                    //centres.add(centre);
-                    liveDataCentre.addCentre(centre);
-                }
-                adapterOriginCentre.notifyDataSetChanged();
-            }
-        });*/
-        /*spinnerOriginCentre.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                liveDataCity = new ViewModelProvider((ViewModelStoreOwner) getContext()).get(LiveDataCity.class);
-                liveDataCity.getCityList();
-                liveDataCentre = new ViewModelProvider((ViewModelStoreOwner) getContext()).get(LiveDataCentre.class);
-                liveDataCentre.getCentreList();
-                String nucleo = (String) parent.getSelectedItem();
-                int idNucleo = 0;
-                int idMunicipio = 0;
-                char idZona;
-                for (int i = 0; i < listaNucleos.length; i++) {
-                    if (nucleo.equalsIgnoreCase(listaNucleos[i].getNombreNucleo())) {
-                        System.out.println("entra");
-                        idNucleo = listaNucleos[i].getIdNucleo();
-                        idMunicipio = listaNucleos[i].getIdMunicipio();
-                        //idZona = listaNucleos[i].getIdZona();
-                        liveDataCentre.addCentre(new Centre(idNucleo));
-                        liveDataCity.addCity(new City(idMunicipio));
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });*/
     }
-
-    /*final Observer<List<Centre>> listObserverOriginCentre = new Observer<List<Centre>>() {
-        @Override
-        public void onChanged(@Nullable List<Centre> userList) {
-            String texto = "";
-            for(int i=0; i<userList.size(); i++){
-                //texto += userList.get(i).getNombre() + " " + userList.get(i).getEdad() +"\n";
-            }
-            //tvLiveData.setText(texto);
-        }
-    };
-
-        liveDataUserViewModel.getUserList().observe(this, listObserver);*/
 
     private void setSpinnerDestinyCentre() {
         spinnerDestinyCentre = view.findViewById(R.id.spinner_destiny_centre);
@@ -358,6 +321,7 @@ public class TripFragment extends Fragment {
                 for (int i = 0; i < listaNucleos.length; i++) {
                     if (nucleoDestino.equalsIgnoreCase(listaNucleos[i].getNombreNucleo())) {
                         idNucleoDestino = listaNucleos[i].getIdNucleo();
+                        zonaDestino = listaNucleos[i].getIdZona();
                         break;
                     }
                 }
@@ -372,7 +336,15 @@ public class TripFragment extends Fragment {
                         adapterOriginCentre.notifyDataSetChanged();
                     }
                 });
-                //listarPlanificador(idNucleoDestino, idNucleoOrigen);
+
+                //Settings settings = new Settings();
+                if (saltos_billete.isEmpty()) {
+                    cogeDatosAPI();
+                    cogeSaltosAPI();
+                } else {
+                    obtieneSaltos();
+                    cogePrecioBillete(saltos);
+                }
             }
 
             @Override
@@ -380,6 +352,89 @@ public class TripFragment extends Fragment {
 
             }
         });
+    }
+
+    private void cogeDatosAPI() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://api.ctan.es/v1/Consorcios/2/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        FareSystemAPI fareSystemAPI = retrofit.create(FareSystemAPI.class);
+        Call<FareList> fareListCall = fareSystemAPI.getFareList();
+        fareListCall.enqueue(new Callback<FareList>() {
+            @Override
+            public void onResponse(Call<FareList> call, Response<FareList> response) {
+                if (!response.isSuccessful()) {
+                    System.out.println("Code: " + response.code());
+                    return;
+                }
+                FareList fareList = response.body();
+                fares = new Fare[fareList.getFareList().size()];
+                for (int i = 0; i < fareList.getFareList().size(); i++) {
+                    fares[i] = fareList.getFareList().get(i);
+                }
+                for (int i = 0; i < fares.length; i++) {
+                    saltos_billete.put(fares[i].getSaltos(), fares[i].getBs());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FareList> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void cogeSaltosAPI() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://api.ctan.es/v1/Consorcios/2/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        FareSystemAPI fareSystemAPI = retrofit.create(FareSystemAPI.class);
+        Call<GapList> gapListCall = fareSystemAPI.getGapList();
+        gapListCall.enqueue(new Callback<GapList>() {
+            @Override
+            public void onResponse(Call<GapList> call, Response<GapList> response) {
+                if (!response.isSuccessful()) {
+                    System.out.println("Code: " + response.code());
+                    return;
+                }
+                GapList gapList = response.body();
+                gaps = new Gap[gapList.getGapList().size()];
+                for (int i = 0; i < gapList.getGapList().size(); i++) {
+                    gaps[i] = gapList.getGapList().get(i);
+                    //System.out.println(gaps[i]);
+                }
+                obtieneSaltos();
+                cogePrecioBillete(saltos);
+            }
+
+            @Override
+            public void onFailure(Call<GapList> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void cogePrecioBillete(int salto) {
+        for (Map.Entry<Integer, Double> entry : saltos_billete.entrySet()) {
+            //System.out.println(entry.getKey() + ":" + entry.getValue());
+            if (entry.getKey() == salto) {
+                bs = entry.getValue();
+                System.out.println("Billete" + bs);
+            }
+        }
+    }
+
+    private void obtieneSaltos() {
+        for (int i = 0; i < gaps.length; i++) {
+            if (zonaDestino.equalsIgnoreCase(gaps[i].getZonaOrigen()) && zonaOrigen.equalsIgnoreCase(gaps[i].getZonaDestino())) {
+                //TextView textViewSaltos = view.findViewById(R.id.text_view_gap);
+                //textViewSaltos.setText(gaps[i].getSaltos() + "");
+                saltos = gaps[i].getSaltos();
+                System.out.println("Saltos: " + saltos);
+            }
+        }
     }
 
     @Override

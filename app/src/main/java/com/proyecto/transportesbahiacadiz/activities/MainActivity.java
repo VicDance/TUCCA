@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
     /*public static String correoCliente;
     public static String tfnoCliente;
     public static String nacimientoCliente;*/
-    public static int idCliente;
+    /*public static */int idCliente;
     private boolean activado;
 
     @Override
@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
             //guardado = true;
             Intent intent = new Intent(MainActivity.this, MenuActivity.class);
             intent.putExtra("nombre", nombreCliente);
+            intent.putExtra("id", idCliente);
             startActivity(intent);
         }
         textViewInvitado = findViewById(R.id.text_view_invitado);
@@ -101,6 +102,7 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                             guardarDatos();
                             Intent intent = new Intent(MainActivity.this, MenuActivity.class);
                             intent.putExtra("nombre", editTextUser.getText().toString().trim());
+                            intent.putExtra("id", idCliente);
                             startActivity(intent);
                             finish();
                         } else {

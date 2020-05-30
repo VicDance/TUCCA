@@ -32,6 +32,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.proyecto.transportesbahiacadiz.Settings.saltos;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
@@ -182,6 +183,7 @@ public class GapFragment extends Fragment {
             if(zonaDestino.equalsIgnoreCase(gaps[i].getZonaOrigen()) && zonaOrigen.equalsIgnoreCase(gaps[i].getZonaDestino())){
                 TextView textViewSaltos = view.findViewById(R.id.text_view_gap);
                 textViewSaltos.setText(gaps[i].getSaltos() + "");
+                saltos = gaps[i].getSaltos();
             }
         }
     }
