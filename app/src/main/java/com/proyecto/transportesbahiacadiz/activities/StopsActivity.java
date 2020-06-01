@@ -3,6 +3,7 @@ package com.proyecto.transportesbahiacadiz.activities;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -66,7 +67,6 @@ public class StopsActivity extends AppCompatActivity {
     private String origen;
     private Horario[] listaHorarios;
     private Segment[] listaSegments;
-    //String[][] tableRow;
     private String[] tableHeader;
     private List<Stop> stopList = new ArrayList<Stop>();
     private TableLayout tableLayout;
@@ -74,11 +74,11 @@ public class StopsActivity extends AppCompatActivity {
     private int length;
     private String nombreLinea = "";
     private int idLinea = 0;
-    private int background;
-    String horaSalida;
-    String horaLlegada;
+    private String horaSalida;
+    private String horaLlegada;
 
     private Button btnPay;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public StopsActivity() {
     }
@@ -87,7 +87,7 @@ public class StopsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stops);
-        background = 0;
+        swipeRefreshLayout = findViewById(R.id.stops_refresh);
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             nucleoOrigen = 0;
@@ -102,6 +102,7 @@ public class StopsActivity extends AppCompatActivity {
             origen = extras.getString("nombreNucleoOrigen");
             destino = extras.getString("nombreNucleoDestino");
             bs = extras.getDouble("precio");
+            //System.out.println(ciudadDestino);
             /*System.out.println("Municipio: " + ciudadOrigen + "\n" + "Nucleo: " + nucleoOrigen);
             System.out.println("Municipio: " + ciudadDestino + "\n" + "Nucleo: " + nucleoDestino);*/
         }
@@ -119,7 +120,7 @@ public class StopsActivity extends AppCompatActivity {
                     try {
                         dataOut.writeUTF("iviaje");
                         dataOut.flush();
-                        dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + ciudadOrigen + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
+                        dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + ciudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
                         dataOut.flush();
                         String estado = dataIn.readUTF();
                         System.out.println("Estado " + estado);
@@ -153,11 +154,6 @@ public class StopsActivity extends AppCompatActivity {
                     newDatos = datos.split("/");
                     //System.out.println(datos);
                     Stop stop = new Stop(Integer.parseInt(newDatos[0]), newDatos[1], newDatos[2], newDatos[3], newDatos[4]);
-                    /*paradas[i].setIdParada(Integer.parseInt(newDatos[0]));
-                    paradas[i].setIdZona(newDatos[1]);
-                    paradas[i].setNombre(newDatos[2]);
-                    paradas[i].setLatitud(newDatos[3]);
-                    paradas[i].setLongitud(newDatos[4]);*/
                     stopList.add(stop);
                 }
                 //System.out.println("Linea " + linea + " parada " + paradas[0]);
@@ -168,6 +164,20 @@ public class StopsActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                try {
+                    listarBloques(nucleoDestino, nucleoOrigen);
+                    listarHorarios(nucleoDestino, nucleoOrigen);
+                    Thread.sleep(1000);
+                    swipeRefreshLayout.setRefreshing(false);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -184,23 +194,29 @@ public class StopsActivity extends AppCompatActivity {
             textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
             textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             textView.setBackgroundColor(Color.rgb(95, 173, 250));
-            /*if(textView.getText().toString().trim().equalsIgnoreCase("lineas")){
-                textView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String linea = textView.getText().toString();
-                        try {
-                            dataOut.writeUTF("id_linea");
-                            dataOut.flush();
-                            dataOut.writeUTF(linea);
-                            dataOut.flush();
-                            idLinea = dataIn.readInt();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+            //for(int x = 0; x < tableHeader.length; x++){
+                if(tableHeader[tableHeader.length -1].equalsIgnoreCase("observaciones")){
+                    //for(int x = 1; x < tableHeader.length -1; x++){
+                    if(i > 0 && i < tableHeader.length -2) {
+                        final int finalI = i;
+                        textView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //System.out.println("click");
+                                try {
+                                    dataOut.writeUTF("direccion_parada");
+                                    dataOut.flush();
+                                    dataOut.writeUTF(tableHeader[finalI].trim());
+                                    dataOut.flush();
+                                    System.out.println("parada " + tableHeader[finalI].trim());
+                                    startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
                     }
-                });
-            }*/
+                }
             cabecera.addView(textView);
         }
         tableLayout.addView(cabecera);
@@ -235,7 +251,7 @@ public class StopsActivity extends AppCompatActivity {
                         System.out.println(lineas[z]);
                         if (x == 0) {
                             textView.setText(listaHorarios[i].getNameLinea());
-                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
+                        } else if (/*x == tableHeader.length-1 && */tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
                             textView.setText(listaHorarios[i].getObservaciones());
                             if (x > 0 && x < (tableHeader.length - 2)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
@@ -243,6 +259,9 @@ public class StopsActivity extends AppCompatActivity {
                                 if (cont == tableHeader.length - 3) {
                                     cont = 0;
                                 }
+                            }
+                            if( x == tableHeader.length-2){
+                                textView.setText(listaHorarios[i].getDias());
                             }
                         } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("frecuencia")) {
                             textView.setText(listaHorarios[i].getDias());

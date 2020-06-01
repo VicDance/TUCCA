@@ -3,6 +3,7 @@ package com.proyecto.transportesbahiacadiz;
 import com.proyecto.transportesbahiacadiz.model.FareList;
 import com.proyecto.transportesbahiacadiz.model.GapList;
 import com.proyecto.transportesbahiacadiz.model.HorarioList;
+import com.proyecto.transportesbahiacadiz.model.NewsList;
 import com.proyecto.transportesbahiacadiz.model.SegmentList;
 
 import retrofit2.Call;
@@ -35,4 +36,7 @@ public interface FareSystemAPI {
 
     @GET("saltos")
     Call<GapList> getGapList();
+
+    @GET("noticias?lang=ES")
+    Call<NewsList> getNewsList();
 }

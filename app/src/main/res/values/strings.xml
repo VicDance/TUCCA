@@ -13,6 +13,7 @@
     <string name="settings">Ajustes</string>
     <string name="me">Yo</string>
     <string name="about">Acerca de</string>
+    <string name="news">Últimas noticias</string>
     <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
     <string name="search_hint">Introduzca código o nombre de parada</string>
@@ -65,4 +66,7 @@
     <string name="camera">Elegir foto existente</string>
     <string name="existing_photo">Tomar foto</string>
     <string name="no_trip">No existen líneas</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

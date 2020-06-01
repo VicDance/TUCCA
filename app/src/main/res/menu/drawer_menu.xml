@@ -28,8 +28,8 @@
         <item android:id="@+id/nav_sign_up"
             android:title="@string/sign_up"
             android:icon="@drawable/ic_logging"/>
-        <!--<item android:id="@+id/nav_settings"
-            android:title="@string/settings"
-            android:icon="@drawable/ic_settings"/>-->
+        <item android:id="@+id/nav_news"
+            android:title="@string/news"
+            android:icon="@drawable/ic_web"/>
     </group>
 </menu>

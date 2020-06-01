@@ -17,74 +17,40 @@ import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.adapters.TimeStopAdapter;
 import com.proyecto.transportesbahiacadiz.model.TimeStopsItem;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
-public class MapStopsActivity extends AppCompatActivity/*Fragment*/ implements OnMapReadyCallback {
-    BottomSheetBehavior bottomSheetBehavior;
-    private RecyclerView recyclerView;
-    private TimeStopAdapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
-    private ArrayList<TimeStopsItem> listItems;
+import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
+
+public class MapStopsActivity extends AppCompatActivity /*implements OnMapReadyCallback*/ {
+    private String latitud;
+    private String longitud;
+    private GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_map_stops);
+        setContentView(R.layout.activity_map_stops);
+        try {
+            String direccion = dataIn.readUTF().trim();
+            //latitud = direccion.split("/")[0];
+            //longitud = direccion.split("/")[1];
+            System.out.println(direccion);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
-        listItems = new ArrayList<>();
-        listItems.add(new TimeStopsItem(1, "Cercano a la parada", "Destino:"));
-        listItems.add(new TimeStopsItem(1, "2 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(1, "5 miutos", "Destino:"));
-        listItems.add(new TimeStopsItem(3, "5 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(3, "7 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(7, "15 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(7, "18 minutos", "Destino:"));
-
-        buildRecyclerView();
+        //SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_stops);
+        //mapFragment.getMapAsync(this);
     }
-    /*@Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_map_stops, container, false);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
-        View bottomSheet = rootView.findViewById(R.id.bottom_sheet_stops);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        listItems = new ArrayList<>();
-        listItems.add(new TimeStopsItem(1, "Cercano a la parada", "Destino:"));
-        listItems.add(new TimeStopsItem(1, "2 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(1, "5 miutos", "Destino:"));
-        listItems.add(new TimeStopsItem(3, "5 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(3, "7 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(7, "15 minutos", "Destino:"));
-        listItems.add(new TimeStopsItem(7, "18 minutos", "Destino:"));
-
-        recyclerView = rootView.findViewById(R.id.recycler_view_time_stops);
-        buildRecyclerView();
-        return rootView;
-    }*/
-
-    @Override
+    /*@Override
     public void onMapReady(GoogleMap googleMap) {
-        LatLng latLng = new LatLng(36.502927, -6.272037);
+        map = googleMap;
+        LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
 
         float zoom = 40;
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-        googleMap.addMarker(new MarkerOptions().position(latLng));
-    }
-
-    private void buildRecyclerView(){
-        recyclerView = findViewById(R.id.recycler_view_time_stops);
-        recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(this);
-        adapter = new TimeStopAdapter(listItems);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(adapter);
-    }
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        map.addMarker(new MarkerOptions().position(latLng));
+    }*/
 }

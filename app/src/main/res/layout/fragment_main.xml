@@ -5,6 +5,7 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/text_view_fare_system_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/fare_system"

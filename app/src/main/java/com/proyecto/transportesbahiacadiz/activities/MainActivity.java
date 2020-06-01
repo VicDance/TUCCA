@@ -159,9 +159,11 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
     private void conectar() {
         final int PUERTO = 6000;
         //mi casa
-        final String HOST = "192.168.1.13";
+        //final String HOST = "192.168.1.13";
         //casa angel
-        //final String HOST = "192.168.137.1";
+        //final String HOST = "192.168.0.105";
+        //cadiz
+        final String HOST = "192.168.0.132";
         //"localhost";
         int SDK_INT = android.os.Build.VERSION.SDK_INT;
         if (SDK_INT > 8) {

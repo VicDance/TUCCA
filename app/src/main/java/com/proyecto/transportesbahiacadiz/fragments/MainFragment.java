@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 
 import com.proyecto.transportesbahiacadiz.dialogs.LocationDialog;
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.model.Trip;
 import com.proyecto.transportesbahiacadiz.model.Zone;
 
 import java.io.IOException;
@@ -27,6 +28,8 @@ import java.util.logging.Logger;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
+import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
+import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 /*import static com.proyecto.tucca.activities.MainActivity.cliente;
 import static com.proyecto.tucca.activities.MainActivity.dataIn;
@@ -36,8 +39,10 @@ public class MainFragment extends Fragment {
     private SearchView searchView = null;
     private SearchView.OnQueryTextListener queryTextListener;
     private TextView zone;
+    private TextView zoneTitle;
     private int size;
     private Zone[] zonas;
+    private Trip[] trips;
     private String[] nombreZonas;
     private String[] newDatos;
     //public static Socket cliente;
@@ -49,31 +54,59 @@ public class MainFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         zone = view.findViewById(R.id.text_view_zone);
-        try {
-            dataOut.writeUTF("zonas");
-            dataOut.flush();
-            //System.out.println(dataIn.readUTF());
-            size = dataIn.readInt();
-            //System.out.println(size);
-            zonas = new Zone[size];
-            for (int i = 0; i < size; i++) {
-                String datos;
-                try {
-                    datos = dataIn.readUTF();
-                    newDatos = datos.split("/");
-                    Zone zona = new Zone(newDatos[0], newDatos[1]);
-                    zonas[i] = zona;
-                } catch (IOException ex) {
-                    Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+        String content;
+        if(login){
+            zoneTitle = view.findViewById(R.id.text_view_fare_system_title);
+            zoneTitle.setText("Historial de viajes");
+            try{
+                dataOut.writeUTF("viajes");
+                dataOut.flush();
+                dataOut.writeInt(usuario.getId());
+                dataOut.flush();
+                int size = dataIn.readInt();
+                trips = new Trip[size];
+                for(int i = 0; i < size; i++){
+                    String texto = dataIn.readUTF();
+                    String[] datos = texto.split("/");
+                    Trip trip = new Trip(datos[0], datos[1], datos[2]);
+                    trips[i] = trip;
                 }
+                content = "";
+                for (int i = 0; i < trips.length; i++) {
+                    content += "- Línea: " + trips[i].getLinea() + " Municipio de destino: " + trips[i].getMunicipio() + " Hora de salida: " +
+                            trips[i].getHoraSalida() + "\n";
+                }
+                zone.append(content);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            String content = "";
-            for(int i = 0; i < zonas.length; i++){
-                content += zonas[i].getIdZona() + ": " + zonas[i].getNombreZona() + "\n";
+        }else {
+            try {
+                dataOut.writeUTF("zonas");
+                dataOut.flush();
+                //System.out.println(dataIn.readUTF());
+                size = dataIn.readInt();
+                //System.out.println(size);
+                zonas = new Zone[size];
+                for (int i = 0; i < size; i++) {
+                    String datos;
+                    try {
+                        datos = dataIn.readUTF();
+                        newDatos = datos.split("/");
+                        Zone zona = new Zone(newDatos[0], newDatos[1]);
+                        zonas[i] = zona;
+                    } catch (IOException ex) {
+                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                content = "";
+                for (int i = 0; i < zonas.length; i++) {
+                    content += zonas[i].getIdZona() + ": " + zonas[i].getNombreZona() + "\n";
+                }
+                zone.append(content);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            zone.append(content);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return view;
     }

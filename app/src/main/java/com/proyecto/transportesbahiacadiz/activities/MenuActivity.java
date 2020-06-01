@@ -27,6 +27,7 @@ import com.proyecto.transportesbahiacadiz.fragments.CardsFragment;
 import com.proyecto.transportesbahiacadiz.fragments.GapAndFareFragment;
 import com.proyecto.transportesbahiacadiz.fragments.MainFragment;
 import com.proyecto.transportesbahiacadiz.fragments.MeFragment;
+import com.proyecto.transportesbahiacadiz.fragments.NewsFragment;
 import com.proyecto.transportesbahiacadiz.fragments.SalePointFragment;
 import com.proyecto.transportesbahiacadiz.fragments.TripFragment;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
@@ -191,6 +192,9 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_sign_up:
                 startActivity(new Intent(MenuActivity.this, MainActivity.class));
+                break;
+            case R.id.nav_news:
+                new TaskCambiarFragment().execute(new NewsFragment());
                 break;
         }
         drawerLayout.closeDrawer(GravityCompat.START);
