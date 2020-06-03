@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
@@ -22,7 +21,6 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.dialogs.ImageDialog;
 import com.proyecto.transportesbahiacadiz.fragments.CardsFragment;
 import com.proyecto.transportesbahiacadiz.fragments.GapAndFareFragment;
 import com.proyecto.transportesbahiacadiz.fragments.MainFragment;
@@ -86,9 +84,13 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 id = extras.getInt("id");
                 if (newString == null || id == 0){
                     double bs = extras.getDouble("pagar");
+                    String hora_salida = extras.getString("salida");
+                    int destino = extras.getInt("destino");
                     //newString= extras.getString("pagar");
                     Bundle bundle = new Bundle();
                     bundle.putDouble("pagar", bs);
+                    bundle.putString("salida", hora_salida);
+                    bundle.putInt("destino", destino);
                     CardsFragment cardsFragment = new CardsFragment();
                     cardsFragment.setArguments(bundle);
                     new TaskCambiarFragment().execute(cardsFragment);
@@ -151,11 +153,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
         byte[] encodeByte = Base64.decode(usuario.getImagen(), Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
         return bitmap;
-    }
-
-    private void showDialog(){
-        ImageDialog imageDialog = new ImageDialog();
-        imageDialog.show(getSupportFragmentManager(), "Image Dialog");
     }
 
     @Override

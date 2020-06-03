@@ -45,6 +45,9 @@ public class CardsFragment extends Fragment {
     private String[] newDatos;
     private SwipeRefreshLayout swipeRefreshLayout;
     private double bs;
+    private String horaSalida;
+    private int destino;
+    private String nombreMunicipio;
 
     public CardsFragment() {
     }
@@ -55,7 +58,18 @@ public class CardsFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_cards, container, false);
         if(getArguments() != null){
             bs = getArguments().getDouble("pagar");
-            System.out.println(bs);
+            horaSalida = getArguments().getString("salida");
+            destino = getArguments().getInt("destino");
+            try {
+                dataOut.writeUTF("nombre_municipio");
+                dataOut.flush();
+                dataOut.writeInt(destino);
+                dataOut.flush();
+                nombreMunicipio = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //System.out.println(bs);
         }
         swipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         cardItemList = new ArrayList<CardItem>();
@@ -212,6 +226,8 @@ public class CardsFragment extends Fragment {
     private void showDialog() {
         CardDialog cardDialog = new CardDialog();
         cardDialog.setBs(bs);
+        cardDialog.setMunicipio(nombreMunicipio);
+        cardDialog.setHoraSalida(horaSalida);
         cardDialog.show(getFragmentManager(), "Card Dialog");
     }
 }

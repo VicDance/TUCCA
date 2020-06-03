@@ -1,28 +1,18 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.media.Session2CommandGroup;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.MonthDisplayHelper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -30,7 +20,6 @@ import android.widget.Toast;
 
 import com.proyecto.transportesbahiacadiz.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.fragments.CardsFragment;
 import com.proyecto.transportesbahiacadiz.model.Horario;
 import com.proyecto.transportesbahiacadiz.model.HorarioList;
 import com.proyecto.transportesbahiacadiz.model.Segment;
@@ -38,12 +27,7 @@ import com.proyecto.transportesbahiacadiz.model.SegmentList;
 import com.proyecto.transportesbahiacadiz.model.Stop;
 
 import java.io.IOException;
-import java.sql.Time;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import retrofit2.Call;
@@ -123,10 +107,12 @@ public class StopsActivity extends AppCompatActivity {
                         dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + ciudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
                         dataOut.flush();
                         String estado = dataIn.readUTF();
-                        System.out.println("Estado " + estado);
+                        //System.out.println("Estado " + estado);
                         //Trip trip = new Trip(usuario.getId(), idLinea, ciudadOrigen, bs, timeSalida, timeLlegada, new Date());
                         startActivity(new Intent(StopsActivity.this, MenuActivity.class)
-                                .putExtra("pagar", bs));
+                                .putExtra("pagar", bs)
+                                .putExtra("salida", horaSalida)
+                                .putExtra("destino", ciudadDestino));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -301,10 +287,31 @@ public class StopsActivity extends AppCompatActivity {
                                         dataOut.flush();
                                         idLinea = dataIn.readInt();
                                         horaSalida = listaHorarios[finalI].getHoras().get(0);
+                                        if(horaSalida.contains("-")){
+                                            for(int i = 0; i < listaHorarios[finalI].getHoras().size(); i++){
+                                                horaSalida = listaHorarios[finalI].getHoras().get(i);
+                                                if(horaSalida.contains("-")){
+                                                    horaSalida = listaHorarios[finalI].getHoras().get(i+1);
+                                                }else{
+                                                    break;
+                                                }
+                                            }
+                                        }
                                         horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-1);
+                                        if(horaLlegada.contains("-")) {
+                                            for (int i = listaHorarios[finalI].getHoras().size() - 2; i >= 0; i--) {
+                                                horaLlegada = listaHorarios[finalI].getHoras().get(i);
+                                                if (horaLlegada.contains("-")) {
+                                                    horaLlegada = listaHorarios[finalI].getHoras().get(i - 1);
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        /*horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-1);
                                         if(horaLlegada.contains("-")){
                                             horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-2);
-                                        }
+                                        }*/
                                         /*DateFormat sdfLlegada = new SimpleDateFormat("hh:mm");
                                         DateFormat sdfSalida = new SimpleDateFormat("hh:mm");
                                         Date dateLlegada = sdfLlegada.parse(horaLlegada);

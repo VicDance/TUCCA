@@ -342,8 +342,8 @@ public class TripFragment extends Fragment {
                     cogeDatosAPI();
                     cogeSaltosAPI();
                 } else {
-                    obtieneSaltos();
-                    cogePrecioBillete(saltos);
+                    cogeSaltosAPI();
+                    //cogePrecioBillete(saltos);
                 }
             }
 
