@@ -1,9 +1,12 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -21,7 +24,7 @@ import java.util.ArrayList;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
-public class CreditCardActivity extends AppCompatActivity implements CreditCardsAdapter.OnItemClickListener {
+public class CreditCardActivity extends AppCompatActivity implements CreditCardsAdapter.OnItemClickListener, CreditCardsAdapter.OnLongItemCliclListener {
     private RecyclerView recyclerView;
     private CreditCardsAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -31,6 +34,7 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
     private int size;
     private String[] newDatos;
     private String newString;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +44,7 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         try {
             dataOut.writeUTF("tarjetas");
             dataOut.flush();
-            //System.out.println(dataIn.readUTF());
             size = dataIn.readInt();
-            //System.out.println("size" + size);
             CreditCard creditCard = null;
             for(int i = 0; i < size; i++) {
                 String datos;
@@ -64,6 +66,34 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
                 startActivity(intent);
             }
         });
+
+        swipeRefreshLayout = findViewById(R.id.refresh_layout_credit_cards);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                try {
+                    dataOut.writeUTF("tarjetas");
+                    dataOut.flush();
+                    size = dataIn.readInt();
+                    creditCardItems.clear();
+                    CreditCard creditCard = null;
+                    for(int i = 0; i < size; i++) {
+                        String datos;
+                        datos = dataIn.readUTF();
+                        newDatos = datos.split("-");
+                        creditCard = new CreditCard(newDatos[3], newDatos[0], newDatos[2]);
+                        creditCardItems.add(creditCard);
+
+                        Thread.sleep(1000);
+                        swipeRefreshLayout.setRefreshing(false);
+
+                        buildRecycler();
+                    }
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void buildRecycler(){
@@ -71,24 +101,8 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new CreditCardsAdapter(creditCardItems, this);
+        adapter = new CreditCardsAdapter(creditCardItems, this, this);
         recyclerView.setAdapter(adapter);
-        /*adapter.setOnItemClickListener(new CreditCardsAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                //String newString;
-                textView = findViewById(R.id.text_view_number_credit_card);
-                System.out.println(textView.getText().toString());
-                Bundle extras = getIntent().getExtras();
-                if(extras == null) {
-                    newString= null;
-                } else {
-                    newString = extras.getString("recarga");
-                    System.out.println(newString);
-                    showDialog();
-                }
-            }
-        });*/
     }
 
     private void showDialog() {
@@ -99,16 +113,46 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
 
     @Override
     public void onItemClick(int position) {
-        //System.out.println(creditCardItems.get(position).getTextNumber());
         textView = findViewById(R.id.text_view_number_credit_card);
-        System.out.println(textView.getText().toString());
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
             newString= null;
         } else {
             newString = extras.getString("recarga");
-            System.out.println(newString);
             showDialog();
         }
+    }
+
+    @Override
+    public void onLongItemClick(int position) {
+        showDeleteDialog(position);
+    }
+
+    private void showDeleteDialog(final int position){
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.textDeleteCard)
+                .setMessage(R.string.deleteCard)
+                .setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            dataOut.writeUTF("btarjetaCredito");
+                            dataOut.flush();
+                            dataOut.writeInt(position);
+                            dataOut.flush();
+                            creditCardItems.remove(position);
+                            adapter.notifyItemRemoved(position);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .show();
     }
 }

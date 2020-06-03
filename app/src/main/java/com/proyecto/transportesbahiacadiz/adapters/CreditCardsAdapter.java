@@ -17,22 +17,19 @@ public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.
     private static final String TAG = "CreditCardAdapter";
     private ArrayList<CreditCard> itemList;
     private OnItemClickListener mListener;
+    private OnLongItemCliclListener longListener;
 
-    public CreditCardsAdapter(ArrayList<CreditCard> itemList, OnItemClickListener onItemClickListener){
+    public CreditCardsAdapter(ArrayList<CreditCard> itemList, OnItemClickListener onItemClickListener, OnLongItemCliclListener onLongItemCliclListener){
         this.itemList = itemList;
         mListener = onItemClickListener;
+        longListener = onLongItemCliclListener;
     }
-
-    /*public void setOnItemClickListener(OnItemClickListener listener){
-        mListener = listener;
-    }*/
 
     @NonNull
     @Override
     public CreditCardsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.credit_card_item, parent, false);
-        //CreditCardsViewHolder viewHolder = new CreditCardsViewHolder(view, mListener);
-        return new CreditCardsViewHolder(view, mListener);
+        return new CreditCardsViewHolder(view, mListener, longListener);
     }
 
     @Override
@@ -48,29 +45,41 @@ public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.
         return itemList.size();
     }
 
-    public static class CreditCardsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public static class CreditCardsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
         public TextView user;
         public TextView textNumber;
         public TextView cad;
         OnItemClickListener mListener;
+        OnLongItemCliclListener longItemCliclListener;
 
-        public CreditCardsViewHolder(@NonNull View itemView, OnItemClickListener listener) {
+        public CreditCardsViewHolder(@NonNull View itemView, OnItemClickListener listener, OnLongItemCliclListener longListener) {
             super(itemView);
             user = itemView.findViewById(R.id.text_view_user_credit_card);
             textNumber = itemView.findViewById(R.id.text_view_number_credit_card);
             cad = itemView.findViewById(R.id.text_view_cad_credit_card);
             mListener = listener;
+            longItemCliclListener = longListener;
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            //Log.d(TAG, "onClick: " + getAdapterPosition());
             mListener.onItemClick(getAdapterPosition());
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            longItemCliclListener.onLongItemClick(getAdapterPosition());
+            return true;
         }
     }
 
     public interface OnItemClickListener{
         void onItemClick(int position);
+    }
+
+    public interface OnLongItemCliclListener{
+        void onLongItemClick(int position);
     }
 }

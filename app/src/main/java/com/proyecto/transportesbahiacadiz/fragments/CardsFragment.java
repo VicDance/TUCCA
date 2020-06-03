@@ -174,7 +174,7 @@ public class CardsFragment extends Fragment {
             @Override
             public void onItemClick(int position) {
                 //textView = view.findViewById(R.id.text_view_number_card);
-                System.out.println(cardItemList.get(position).getTextNumber());
+                //System.out.println(cardItemList.get(position).getTextNumber());
                 try {
                     dataOut.writeUTF("tarjeta");
                     dataOut.flush();
