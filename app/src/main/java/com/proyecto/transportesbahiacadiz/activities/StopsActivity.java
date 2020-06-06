@@ -36,6 +36,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.view.Gravity.CENTER_VERTICAL;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
@@ -227,11 +228,12 @@ public class StopsActivity extends AppCompatActivity {
         int cont = 0;
         for (int i = 0; i < listaHorarios.length; i++) {
             tableRow = new TableRow(this);
-            TableRow.LayoutParams lp = new TableRow.LayoutParams(100, 70);
+            TableRow.LayoutParams lp = new TableRow.LayoutParams(100, 100);
             lp.bottomMargin = 20;
             tableRow.setLayoutParams(lp);
             for (int x = 0; x < length; x++) {
                 final TextView textView = new TextView(this);
+                textView.setHeight(100);
                 for(int z = 0; z < lineas.length; z++) {
                     if (listaHorarios[i].getNameLinea().equalsIgnoreCase(lineas[z])) {
                         System.out.println(lineas[z]);
@@ -260,8 +262,9 @@ public class StopsActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
+                        //textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
                         textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        textView.setGravity(CENTER_VERTICAL);
                         if(textView.getText().toString().trim().contains("M")) {
                             final int finalI = i;
                             textView.setOnClickListener(new View.OnClickListener() {

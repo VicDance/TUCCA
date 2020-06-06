@@ -42,10 +42,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawerLayout;
     private ImageView userImage;
     private int id;
-    /*private static final int CAMERA_REQUEST = 1888;
-    private static final int MY_CAMERA_PERMISSION_CODE = 100;
-    public static final int PICK_IMAGE = 1;
-    public static final int GALLERY = 200;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,23 +91,11 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                     cardsFragment.setArguments(bundle);
                     new TaskCambiarFragment().execute(cardsFragment);
                 }
-                System.out.println(newString);
+                //System.out.println(newString);
                 View headView = navigationView.getHeaderView(0);
                 TextView textView = headView.findViewById(R.id.text_view_name);
                 userImage = headView.findViewById(R.id.user_image);
                 getUser();
-                //System.out.println(usuario);
-                //System.out.println(user.getImagen().length());
-                /*if(usuario.getImagen().length() != 0 || usuario.getImagen() != null){
-                    Uri uri = Uri.parse(usuario.getImagen());
-                    userImage.setImageURI(uri);
-                }*/
-                /*userImage.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        showDialog();
-                    }
-                });*/
                 textView.setText(newString);
             }
         }

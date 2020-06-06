@@ -32,10 +32,11 @@ public class Trip {
         this.horaSalida = horaSalida;
     }
 
-    public Trip(String linea, String municipio, String horaSalida){
+    public Trip(String linea, String municipio, String horaSalida, Date fechaViaje){
         this.linea = linea;
         this.municipio = municipio;
         this.horaSalida = horaSalida;
+        this.fechaViaje = fechaViaje;
     }
 
     public Trip(int idMunicipio, String horaSalida){

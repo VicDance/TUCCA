@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.model.CodigoQR;
 
 import java.io.IOException;
 import java.util.Random;
@@ -23,6 +24,8 @@ public class AddCardActivity extends AppCompatActivity {
     private TextView textViewDailyCard;
     private TextView textViewRetiredCard;
     private TextView textViewStudentCard;
+
+    public static CodigoQR codigoQR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +54,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){
+                                        codigoQR = new CodigoQR();
                                         new AlertDialog.Builder(AddCardActivity.this)
                                                 .setTitle(R.string.correct)
                                                 .setMessage("Tarjeta creada correctamente")
@@ -93,6 +97,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){
+                                        codigoQR = new CodigoQR();
                                         new AlertDialog.Builder(AddCardActivity.this)
                                                 .setTitle(R.string.correct)
                                                 .setMessage("Tarjeta creada correctamente")
@@ -141,6 +146,7 @@ public class AddCardActivity extends AppCompatActivity {
                                     dataOut.flush();
                                     String estado = dataIn.readUTF();
                                     if(estado.equalsIgnoreCase("correcto")){
+                                        codigoQR = new CodigoQR();
                                         new AlertDialog.Builder(AddCardActivity.this)
                                                 .setTitle(R.string.correct)
                                                 .setMessage("Tarjeta creada correctamente")

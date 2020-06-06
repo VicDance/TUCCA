@@ -10,11 +10,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.proyecto.transportesbahiacadiz.dialogs.LocationDialog;
@@ -23,9 +26,13 @@ import com.proyecto.transportesbahiacadiz.model.Trip;
 import com.proyecto.transportesbahiacadiz.model.Zone;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
@@ -45,15 +52,22 @@ public class MainFragment extends Fragment {
     private Trip[] trips;
     private String[] nombreZonas;
     private String[] newDatos;
-    //public static Socket cliente;
-    //public static DataOutputStream dataOut;
-    //public static DataInputStream dataIn;
+    private NestedScrollView scrollViewNextTrip;
+    private NestedScrollView scrollViewDone;
+    private TextView textViewNextTrip;
+    private TextView textViewDone;
+    private TextView textViewTrips;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         zone = view.findViewById(R.id.text_view_zone);
+        scrollViewNextTrip = view.findViewById(R.id.scroll_view_zone);
+        scrollViewDone= view.findViewById(R.id.scroll_view_done);
+        textViewDone = view.findViewById(R.id.text_view_done);
+        textViewNextTrip = view.findViewById(R.id.text_view_next_trip);
+        textViewTrips = view.findViewById(R.id.text_view_trip);
         String content;
         if(login){
             zoneTitle = view.findViewById(R.id.text_view_fare_system_title);
@@ -68,19 +82,50 @@ public class MainFragment extends Fragment {
                 for(int i = 0; i < size; i++){
                     String texto = dataIn.readUTF();
                     String[] datos = texto.split("/");
-                    Trip trip = new Trip(datos[0], datos[1], datos[2]);
+                    java.util.Date date = new java.util.Date();
+                    date.setTime(Long.parseLong(datos[3]));
+                    Trip trip = new Trip(datos[0], datos[1], datos[2], new Date(date.getTime()));
                     trips[i] = trip;
                 }
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-YYY");
+                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm");
                 content = "";
+                java.util.Date d = new java.util.Date();
+                java.sql.Date date = new java.sql.Date(d.getTime());
+                System.out.println("Cantidad viajes " + trips.length);
                 for (int i = 0; i < trips.length; i++) {
                     content += "- Línea: " + trips[i].getLinea() + " Municipio de destino: " + trips[i].getMunicipio() + " Hora de salida: " +
                             trips[i].getHoraSalida() + "\n";
+                    String fechaActual = sdf.format(date);
+                    String fechaViaje = sdf.format(trips[i].getFechaViaje());
+                    if(compruebaFecha(fechaViaje, fechaActual)){
+                        String horaActual = sdfHora.format(date);
+                        /*System.out.println("fecha viaje: " + fechaViaje);
+                        System.out.println("fecha hoy: " + fechaActual);
+                        System.out.println("hora viaje: " + trips[i].getHoraSalida());
+                        System.out.println("hora hoy: " + horaActual);*/
+                        String respuesta = compruebaHora(trips[i].getHoraSalida(), horaActual);
+                        //System.out.println("Respuesta " + respuesta);
+                        if(respuesta.equals("mayor")){
+                            zone.append(content);
+                        }else {
+                            textViewTrips.append(content);
+                        }
+                    }else{
+                        textViewTrips.append(content);
+                    }
                 }
-                zone.append(content);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }else {
+            LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            //param.setMargins(20, 20, 20, 20);
+            scrollViewNextTrip.setLayoutParams(param);
+            textViewDone.setVisibility(View.INVISIBLE);
+            textViewNextTrip.setVisibility(View.INVISIBLE);
+            //zone = new TextView(getContext());
+            //scrollViewNextTrip.addView(zone);
             try {
                 dataOut.writeUTF("zonas");
                 dataOut.flush();
@@ -104,11 +149,42 @@ public class MainFragment extends Fragment {
                     content += zonas[i].getIdZona() + ": " + zonas[i].getNombreZona() + "\n";
                 }
                 zone.append(content);
+                //scrollViewNextTrip.addView(zone);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         return view;
+    }
+
+    private boolean compruebaFecha(String fechaViaje, String hoy){
+        boolean igual = false;
+        String[] fechaViajeSplit = fechaViaje.split("-");
+        String[] hoySplit = hoy.split("-");
+        if(Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0]) && Integer.parseInt(fechaViajeSplit[1]) == Integer.parseInt(hoySplit[1])
+                && Integer.parseInt(fechaViajeSplit[2]) == Integer.parseInt(hoySplit[2])){
+            igual = true;
+        }
+
+        return igual;
+    }
+
+    private String compruebaHora(String horaViaje, String nuevaHora){
+        String cad = "";
+        String[] fechaViajeSplit = horaViaje.split(":");
+        String[] hoySplit = nuevaHora.split(":");
+        if(Integer.parseInt(fechaViajeSplit[0]) > Integer.parseInt(hoySplit[0])){
+            cad = "mayor";
+        }else if(Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0])){
+            if(Integer.parseInt(fechaViajeSplit[1]) > Integer.parseInt(hoySplit[1])){
+                cad = "mayor";
+            }else{
+                cad = "menor";
+            }
+        }else{
+            cad = "menor";
+        }
+        return cad;
     }
 
     /*private void conectar(){

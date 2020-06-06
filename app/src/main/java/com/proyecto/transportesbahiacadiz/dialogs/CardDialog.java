@@ -28,6 +28,7 @@ import android.widget.TextView;
 
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.CreditCardActivity;
+import com.proyecto.transportesbahiacadiz.model.CodigoQR;
 
 import net.glxn.qrgen.android.QRCode;
 
@@ -37,6 +38,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static android.content.Context.SENSOR_SERVICE;
+import static com.proyecto.transportesbahiacadiz.activities.AddCardActivity.codigoQR;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
@@ -59,6 +61,7 @@ public class CardDialog extends DialogFragment {
     private MediaPlayer mediaPlayer;
     int cont;
     static String contenidoQR;
+    private String horaCodigo;
 
     @Nullable
     @Override
@@ -79,6 +82,12 @@ public class CardDialog extends DialogFragment {
         btnQr = view.findViewById(R.id.btn_qr);
         imageViewQr = view.findViewById(R.id.image_view_qr);
         imageViewQr.setVisibility(View.GONE);
+        /*if(getCodigo() != null){
+            contenidoQR += "Hora última utilización " + codigoQR.getHora_utilizacion() + "\n"
+                    + "Hora de salida " + codigoQR.getHora_salida() + "\n"
+                    + "Municipio de destino " + codigoQR.getNombreMunicipio() + "\n"
+                    + "Tarjeta tipo " + codigoQR.getTipoTarjeta();
+        }*/
         try {
             numtarjeta = dataIn.readUTF();
             saldoYDescuento = dataIn.readUTF();
@@ -86,6 +95,14 @@ public class CardDialog extends DialogFragment {
             descuento = Double.parseDouble(saldoYDescuento.split("/")[1]);
             System.out.println("saldo" + saldo + "descuento " + descuento);
             textView.setText(saldo + "");
+
+            dataOut.writeUTF("codigo");
+            dataOut.flush();
+            dataOut.writeUTF(numtarjeta);
+            dataOut.flush();
+            contenidoQR = dataIn.readUTF();
+            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
+            imageViewQr.setImageBitmap(bitmap);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -204,17 +221,19 @@ public class CardDialog extends DialogFragment {
                                     //TODO generar codigo qr
                                     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
                                     java.util.Date horaActual = new java.util.Date();
-                                    String horaCodigo = dateFormat.format(horaActual);
-                                    contenidoQR += "Hora última utilización " + horaCodigo + "\n"
+                                    horaCodigo = dateFormat.format(horaActual);
+                                    contenidoQR = "Hora última utilización " + horaCodigo + "\n"
                                             + "Hora de salida " + hora_salida + "\n"
                                             + "Municipio de destino " + municipio + "\n"
                                             + "Tarjeta tipo " + tipoTarjeta;
+                                    System.out.println("hora codigo " + horaCodigo);
+                                    setCodigo();
                                     Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
                                     imageViewQr.setImageBitmap(bitmap);
                                     btnQr.setVisibility(View.VISIBLE);
                                     dataOut.writeUTF("actualiza_codigo");
                                     dataOut.flush();
-                                    dataOut.writeUTF(horaCodigo + "/" + numtarjeta);
+                                    dataOut.writeUTF(horaCodigo + "/" + numtarjeta + "/" + contenidoQR);
                                     dataOut.flush();
                                 }
                             } catch (IOException e) {
@@ -233,5 +252,24 @@ public class CardDialog extends DialogFragment {
             }
         };
         sensorManager.registerListener(sensorEventListener, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    private void setCodigo(){
+        codigoQR = new CodigoQR();
+        codigoQR.setHora_utilizacion(horaCodigo);
+        codigoQR.setHora_salida(hora_salida);
+        codigoQR.setMensaje(contenidoQR);
+        /*codigoQR.setNombreMunicipio(municipio);
+        codigoQR.setTipoTarjeta(tipoTarjeta);*/
+    }
+
+    private CodigoQR getCodigo(){
+        codigoQR = new CodigoQR();
+        codigoQR.setHora_utilizacion(codigoQR.getHora_utilizacion());
+        codigoQR.setHora_salida(codigoQR.getHora_salida());
+        /*codigoQR.setNombreMunicipio(codigoQR.getNombreMunicipio());
+        codigoQR.setTipoTarjeta(codigoQR.getTipoTarjeta());*/
+
+        return codigoQR;
     }
 }

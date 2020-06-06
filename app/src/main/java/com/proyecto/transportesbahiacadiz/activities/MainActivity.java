@@ -94,9 +94,9 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                         dataOut.writeUTF(editTextPassword.getText().toString());
                         dataOut.flush();
                         String respuesta = dataIn.readUTF();
-                        if (respuesta.equalsIgnoreCase("correcto")) {
+                        System.out.println(respuesta);
+                        if (respuesta.trim().contains("cliente")) {
                             idCliente = dataIn.readInt();
-                            //nombreCliente = editTextUser.getText().toString().trim();
                             login = true;
                             guardaEstado();
                             guardarDatos();
@@ -105,7 +105,11 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                             intent.putExtra("id", idCliente);
                             startActivity(intent);
                             finish();
-                        } else {
+                        } else if(respuesta.trim().contains("revisor")){
+                            //TODO ir a pantalla revisor
+                            startActivity(new Intent(MainActivity.this, ScanActivity.class));
+                            finish();
+                        }else{
                             new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("No se pudo conectar")
                                     .setMessage("Usuario o contraseña incorrectos")
@@ -159,11 +163,11 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
     private void conectar() {
         final int PUERTO = 6000;
         //mi casa
-        //final String HOST = "192.168.1.13";
+        final String HOST = "192.168.1.13";
         //casa angel
         //final String HOST = "192.168.0.105";
         //cadiz
-        final String HOST = "192.168.0.132";
+        //final String HOST = "192.168.0.132";
         //"localhost";
         int SDK_INT = android.os.Build.VERSION.SDK_INT;
         if (SDK_INT > 8) {
