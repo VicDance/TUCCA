@@ -71,4 +71,6 @@
     <string name="next_trip">Viajes por hacer</string>
     <string name="scan">Escanear código</string>
     <string name="choose_city">Elija municipio</string>
+    <string name="search">Buscar</string>
+    <string name="location">Cerca de mi ubicación</string>
 </resources>

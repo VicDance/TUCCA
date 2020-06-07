@@ -74,7 +74,6 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //startActivity(new Intent(getContext(), MapsActivity.class));
                 checkPermission();
                 mapFragment.getMapAsync(SalePointFragment.this);
             }
@@ -87,7 +86,7 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
             nombreNucleos = new String[size];
             String datos;
             String[] newDatos;
-            for(int i = 0; i < size; i++){
+            for (int i = 0; i < size; i++) {
                 datos = dataIn.readUTF();
                 newDatos = datos.split("/");
                 nucleos[i] = new Centre(Integer.parseInt(newDatos[1]), newDatos[0]);
@@ -102,7 +101,7 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    private void setSpinner(){
+    private void setSpinner() {
         adapterCentre = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, nombreNucleos);
         adapterCentre.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapterCentre);
@@ -114,8 +113,8 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
                 String[] direccionMap;
                 latitudes = new ArrayList<String>();
                 longitudes = new ArrayList<String>();
-                for(int i = 0; i < nucleos.length; i++){
-                    if(nucleo.equals(nucleos[i].getNombreNucleo())){
+                for (int i = 0; i < nucleos.length; i++) {
+                    if (nucleo.equals(nucleos[i].getNombreNucleo())) {
                         idNucleo = nucleos[i].getIdNucleo();
                         try {
                             dataOut.writeUTF("puntos_venta_mapa");
@@ -125,7 +124,7 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
                             int puntosSize = dataIn.readInt();
                             //direccionMap = new String[puntosSize];
                             String direcciones;
-                            for(int x = 0; x < puntosSize; x++){
+                            for (int x = 0; x < puntosSize; x++) {
                                 direcciones = dataIn.readUTF();
                                 String[] newDireccion = direcciones.split("/");
                                 latitudes.add(newDireccion[0]);
@@ -155,44 +154,38 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
-   @Override
+    @Override
     public void onMapReady(GoogleMap googleMap) {
-       //LatLng punto = new LatLng(36.527082, -6.288597);
-       map = googleMap;
-       map.clear();
-       if (locationPermissionsGranted) {
-           getDeviceLocation();
-           if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                   != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(),
-                   Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-               return;
-           }
-           map.setMyLocationEnabled(true);
-           map.getUiSettings().setMyLocationButtonEnabled(false);
+        //LatLng punto = new LatLng(36.527082, -6.288597);
+        map = googleMap;
+        map.clear();
+        if (locationPermissionsGranted) {
+            //getDeviceLocation();
+            if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            map.setMyLocationEnabled(true);
+            map.getUiSettings().setMyLocationButtonEnabled(true);
 
-       }
-        if(idNucleo != 0){
-            //System.out.println("entra");
-            for(int i = 0, j = 0; i < latitudes.size() && j < longitudes.size(); i++, j++){
+        }
+        LatLng punto = null;
+        if (idNucleo != 0) {
+            for (int i = 0, j = 0; i < latitudes.size() && j < longitudes.size(); i++, j++) {
                 latitud = latitudes.get(i);
                 longitud = longitudes.get(j);
-                //System.out.println("Latitud " + latitud + "Longitud " + longitud);
-                LatLng punto = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
-                //googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 16f));
+                punto = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
                 map.addMarker(new MarkerOptions().position(punto));
             }
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 12f));
             latitudes.clear();
             longitudes.clear();
-            /*System.out.println("Latitud " + latitudes.get(0) + "Longitud " + longitudes.get(0));
-            LatLng punto = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
-            map.addMarker(new MarkerOptions().position(punto));
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 400.0f));*/
         }
     }
 
-    private void getDeviceLocation(){
+    /*private void getDeviceLocation(){
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
-
         try{
             if(locationPermissionsGranted){
                 final Task location = fusedLocationProviderClient.getLastLocation();
@@ -214,27 +207,27 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
         }catch (SecurityException e){
             System.out.println("getDeviceLocation: SecurityException: " + e.getMessage());
         }
-    }
+    }*/
 
-    private void moveCamera(LatLng latLng, float zoom){
+    private void moveCamera(LatLng latLng, float zoom) {
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
 
-    private void checkPermission(){
+    private void checkPermission() {
         String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION};
 
-        if(ContextCompat.checkSelfPermission(getContext(),
-                FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-            if(ContextCompat.checkSelfPermission(getContext(),
-                    COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(getContext(),
+                FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 locationPermissionsGranted = true;
-            }else{
+            } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         permissions,
                         LOCATION_PERMISSION_REQUEST_CODE);
             }
-        }else{
+        } else {
             ActivityCompat.requestPermissions(getActivity(),
                     permissions,
                     LOCATION_PERMISSION_REQUEST_CODE);
