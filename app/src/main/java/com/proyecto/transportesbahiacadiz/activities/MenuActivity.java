@@ -26,9 +26,12 @@ import com.proyecto.transportesbahiacadiz.fragments.GapAndFareFragment;
 import com.proyecto.transportesbahiacadiz.fragments.MainFragment;
 import com.proyecto.transportesbahiacadiz.fragments.MeFragment;
 import com.proyecto.transportesbahiacadiz.fragments.NewsFragment;
+import com.proyecto.transportesbahiacadiz.fragments.PlacesFragment;
 import com.proyecto.transportesbahiacadiz.fragments.SalePointFragment;
 import com.proyecto.transportesbahiacadiz.fragments.TripFragment;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
+
+import java.io.IOException;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
@@ -159,14 +162,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_log:
                 new TaskCambiarFragment().execute(new MeFragment());
-                /*String newString;
-                Bundle extras = getIntent().getExtras();
-                if(extras == null) {
-                    newString= null;
-                } else {
-                    newString = extras.getString("nombre");
-                    System.out.println(newString);
-                }*/
                 break;
             case R.id.nav_gap_fare:
                 new TaskCambiarFragment().execute(new GapAndFareFragment());
@@ -176,6 +171,15 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_news:
                 new TaskCambiarFragment().execute(new NewsFragment());
+                break;
+            case R.id.nav_places:
+                try {
+                    dataOut.writeUTF("lugares_interes");
+                    dataOut.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                new TaskCambiarFragment().execute(new PlacesFragment());
                 break;
         }
         drawerLayout.closeDrawer(GravityCompat.START);
