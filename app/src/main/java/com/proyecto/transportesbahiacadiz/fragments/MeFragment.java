@@ -13,8 +13,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
+import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -38,14 +41,20 @@ import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.CreditCardActivity;
 import com.proyecto.transportesbahiacadiz.activities.MenuActivity;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
+import com.squareup.picasso.Picasso;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.cliente;
@@ -78,8 +87,10 @@ public class MeFragment extends Fragment {
     private String fecha_nac;
     private String[] newDatos;
     private int id;
-    String path;
-    File imagen;
+    private String path;
+    private File imagen;
+    private ConnectionClass connectionClass;
+    private String estado;
 
     private static final int CAMERA_REQUEST = 1888;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
@@ -89,10 +100,14 @@ public class MeFragment extends Fragment {
     private final String CARPETA_RAIZ = "transportesCadizProfilePictures/";
     private final String RUTA_IMAGEN = CARPETA_RAIZ + "profile";
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_me, container, false);
+
+        connectionClass = new ConnectionClass(getContext());
+
         btnExit = view.findViewById(R.id.btn_exit);
         btnChangePassword = view.findViewById(R.id.btn_change_password);
         imageViewUser = view.findViewById(R.id.image_user);
@@ -103,16 +118,8 @@ public class MeFragment extends Fragment {
         textViewBorn = view.findViewById(R.id.text_view_born_date);
         textViewEmail = view.findViewById(R.id.text_view_email);
         textViewPhone = view.findViewById(R.id.text_view_phone);
-        //textViewName = view.findViewById(R.id.text_view_name);
 
-        //try {
-        if (login) {
-            setUser();
-        } else {
-            textViewNoUser = view.findViewById(R.id.text_view_no_user);
-            textViewNoUser.setText(R.string.no_user);
-            disableUser();
-        }
+        setUser();
 
         btnExit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,18 +127,13 @@ public class MeFragment extends Fragment {
                 login = false;
                 Intent intent = new Intent(getContext(), MenuActivity.class);
                 startActivity(intent);
-                //getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new LoginFragment()).commit();
             }
         });
 
         imageViewGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);*/
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 intent.setType("image/*");
                 startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
             }
@@ -142,7 +144,7 @@ public class MeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (getContext().checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                        || (getContext().checkSelfPermission(WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED)) {
+                        || (getContext().checkSelfPermission(WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA, WRITE_EXTERNAL_STORAGE}, MY_CAMERA_PERMISSION_CODE);
                 } else {
                     File file = new File(Environment.getExternalStorageDirectory(), RUTA_IMAGEN);
@@ -150,23 +152,18 @@ public class MeFragment extends Fragment {
                     String nombre = "";
                     if (creada == false) {
                         creada = file.mkdirs();
-                    } else if(creada){
+                    } else if (creada) {
                         //creada = file.mkdirs();
                         nombre = usuario.getNombre() + ".jpg";
                     }
                     path = Environment.getExternalStorageDirectory() + File.separator + RUTA_IMAGEN + File.separator + nombre;
                     imagen = new File(path);
-                    //String path = Environment.getDataDirectory() + File.separator +  + File.separator
-                    //Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     Uri photoURI = FileProvider.getUriForFile(getContext(),
                             BuildConfig.APPLICATION_ID + ".provider", imagen);
                     cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                    //cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imagen));
-                    //ImageDialog.this.dismiss();
                 }
-                //File file = new File(Environment.getExternalStorageDirectory());
             }
         });
 
@@ -181,34 +178,17 @@ public class MeFragment extends Fragment {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(getContext(), "camera permission granted", Toast.LENGTH_LONG).show();
                 Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                /*if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N)
-                {
-                    String authorities=getContext().getApplicationContext().getPackageName()+".provider";
-                    Uri imageUri= FileProvider.getUriForFile(getContext(),authorities,imagen);
-                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                    //cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }else
-                {
-                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imagen));
-                    //cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }*/
-                //String authorities=getContext().getApplicationContext().getPackageName()+".provider";
                 Uri photoURI = FileProvider.getUriForFile(getContext(),
                         BuildConfig.APPLICATION_ID + ".provider", imagen);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                //Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                /*cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivityForResult(cameraIntent, CAMERA_REQUEST);*/
             } else {
                 Toast.makeText(getContext(), "camera permission denied", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == GALLERY) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                /*Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);*/
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                //Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 intent.setType("image/*");
                 startActivityForResult(intent, PICK_IMAGE);
             } else {
@@ -231,102 +211,45 @@ public class MeFragment extends Fragment {
                         new MediaScannerConnection.OnScanCompletedListener() {
                             @Override
                             public void onScanCompleted(String path, Uri uri) {
-                                Log.i("Ruta de almacenamiento", "Path: "+ path);
+                                Log.i("Ruta de almacenamiento", "Path: " + path);
                             }
                         });
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 Bitmap scaledBmp = Bitmap.createScaledBitmap(bitmap, 400, 450, true);
                 imageViewUser.setImageBitmap(scaledBmp);
                 usuario.setImagen(path);
-                //System.out.println("Path " + path);
-                /*Bitmap photo = (Bitmap) data.getExtras().get("data");
-                scaledBmp = Bitmap.createScaledBitmap(photo, 400, 450, true);
-                imageViewUser.setImageBitmap(scaledBmp);
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byteArray = stream.toByteArray();
-
-                encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-                usuario.setImagen(encodedImage);*/
-                /*System.out.println(resultCode);
-                Uri path = data.getData();
-                System.out.println(path);
-                imageViewUser.setImageURI(path);*/
-                /*Uri path = data.getData();
-                imageViewUser.setImageURI(path);
-                usuario.setImagen(path.getPath());*/
-                //System.out.println(usuario.getImagen());
             } else if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
-                /*Bitmap photo = (Bitmap) data.getExtras().get("data");
-                System.out.println(photo);
-                scaledBmp = Bitmap.createScaledBitmap(photo, 400, 450, true);
-                imageViewUser.setImageBitmap(scaledBmp);*/
+                Uri imageUri = data.getData();
+                path = imageUri.getPath();
+                if (path != null) {
+                    InputStream imageStream = null;
+                    try {
+                        imageStream = getActivity().getContentResolver().openInputStream(
+                                imageUri);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
 
-                /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byteArray = stream.toByteArray();
-
-                encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP);*/
-                //usuario.setImagen(encodedImage);
-                /*InputStream inputStream = getActivity().getApplicationContext().getContentResolver().openInputStream(data.getData());
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
-
-                scaledBmp = Bitmap.createScaledBitmap(bmp, 400, 450, true);
-                imageViewUser.setImageBitmap(scaledBmp);
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                scaledBmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byteArray = stream.toByteArray();
-
-                encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-                usuario.setImagen(encodedImage);*/
-                Uri path = data.getData();
-                imageViewUser.setImageURI(path);
-                usuario.setImagen(path.getPath());
-                //System.out.println("Path: " + path);
-            }
-
-            //System.out.println("sale2");
-            dataOut.writeUTF("i_imagen");
-            dataOut.flush();
-            //System.out.println(usuario.getImagen());
-            dataOut.writeUTF(usuario.getNombre() + "¬" + usuario.getImagen());
-            dataOut.flush();
-            String estado = dataIn.readUTF();
-            if (estado.equalsIgnoreCase("correcto")) {
-                new AlertDialog.Builder(getContext())
-                        .setTitle(getString(R.string.correct))
-                        .setMessage("Se ha registrado satisfactoriamente")
-                        .show();
-            } else {
-                new AlertDialog.Builder(getContext())
-                        .setTitle(getString(R.string.incorrect))
-                        .setMessage("No se ha registrar")
-                        .show();
+                    // Transformamos la URI de la imagen a inputStream y este a un Bitmap
+                    Bitmap bmp = BitmapFactory.decodeStream(imageStream);
+                    imageViewUser.setImageBitmap(bmp);
+                    System.out.println(path);
+                    usuario.setImagen(path);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     private void cambiarImagen(Usuario usuario) {
         try {
             if (usuario.getImagen() == null || usuario.getImagen().length() == 0) {
                 imageViewUser.setImageResource(R.drawable.ic_person_loggin);
             } else {
-                /*byte[] imageByte = Base64.decode(usuario.getImagen(), Base64.NO_WRAP);
-                ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-                Bitmap photo = BitmapFactory.decodeStream(bis);
-                imageViewUser.setImageBitmap(photo);*/
-                System.out.println(usuario.getImagen());
-                byte[] imageByte = Base64.decode(usuario.getImagen(), Base64.NO_WRAP);
-                ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-                Bitmap photo = BitmapFactory.decodeStream(bis);
-                imageViewUser.setImageBitmap(photo);
-                /*Uri uri = Uri.parse(usuario.getImagen());
-                imageViewUser.setImageURI(uri);*/
+                System.out.println("file:" + usuario.getImagen());
+                Picasso.with(getContext()).load("file:" + usuario.getImagen()).config(Bitmap.Config.RGB_565).fit().centerCrop().into(imageViewUser);
             }
 
         } catch (Exception ex) {
@@ -334,72 +257,8 @@ public class MeFragment extends Fragment {
         }
     }
 
-    private void disableUser() {
-        //try {
-        btnExit.setEnabled(false);
-        btnChangePassword.setVisibility(View.INVISIBLE);
-        textViewUser = view.findViewById(R.id.text_view_user_user);
-        textViewUser.setVisibility(View.INVISIBLE);
-        textViewBorn = view.findViewById(R.id.text_view_date_date);
-        textViewBorn.setVisibility(View.INVISIBLE);
-        textViewEmail = view.findViewById(R.id.text_view_email_email);
-        textViewEmail.setVisibility(View.INVISIBLE);
-        textViewPhone = view.findViewById(R.id.text_view_phone_phone);
-        textViewPhone.setVisibility(View.INVISIBLE);
-        /*}catch (IOException e) {
-            e.printStackTrace();
-        }*/
-    }
-
     private void setUser() {
-        String datos = null;
-        try {
-            dataOut.writeUTF("cliente");
-            dataOut.flush();
-            dataOut.writeUTF(getDatos(getContext()));
-            dataOut.flush();
-            datos = dataIn.readUTF();
-            newDatos = datos.split("¬");
-            usuario = new Usuario();
-            if (newDatos.length == 7) {
-                //System.out.println("entra");
-                usuario.setId(Integer.parseInt(newDatos[0]));
-                usuario.setNombre(newDatos[1]);
-                usuario.setCorreo(newDatos[3]);
-                usuario.setFecha_nac(newDatos[4]);
-                usuario.setTfno(Integer.parseInt(newDatos[5]));
-                usuario.setImagen(newDatos[6]);
-                //System.out.println(newDatos[5]);
-                /*Uri uri = Uri.parse(usuario.getImagen());
-                imageViewUser.setImageURI(uri);*/
-                //ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(usuario.getFoto());
-                //Bitmap bitmap = BitmapFactory.decodeFile(usuario.getImagen());
-                //System.out.println(bitmap);
-                /*Bitmap scaledBmp = Bitmap.createScaledBitmap(bitmap, 400, 450, true);
-                imageViewUser.setImageBitmap(scaledBmp);*/
-                /*usuario.setImagen(newDatos[5]);
-                Uri uri = Uri.parse(usuario.getImagen());
-                imageViewUser.setImageURI(uri);*/
-            } else {
-                usuario.setId(Integer.parseInt(newDatos[0]));
-                usuario.setNombre(newDatos[1]);
-                usuario.setCorreo(newDatos[3]);
-                usuario.setFecha_nac(newDatos[4]);
-                usuario.setTfno(Integer.parseInt(newDatos[5]));
-            }
-            nombre = usuario.getNombre();
-            contraseña = newDatos[1];
-            correo = usuario.getCorreo();
-            fecha_nac = usuario.getFecha_nac();
-            tfno = usuario.getTfno();
-
-            textViewUser.setText(nombre);
-            textViewBorn.setText(fecha_nac);
-            textViewEmail.setText(correo);
-            textViewPhone.setText(tfno + "");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new setUserTask().execute();
     }
 
     @Override
@@ -433,5 +292,103 @@ public class MeFragment extends Fragment {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    class setUserTask extends AsyncTask<Void, Void, Void>{
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            String datos = null;
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("cliente");
+                dataOut.flush();
+                dataOut.writeUTF(getDatos(getContext()));
+                dataOut.flush();
+                datos = dataIn.readUTF();
+                newDatos = datos.split("¬");
+                usuario = new Usuario();
+                if (newDatos.length == 7) {
+                    //System.out.println("entra");
+                    usuario.setId(Integer.parseInt(newDatos[0]));
+                    usuario.setNombre(newDatos[1]);
+                    usuario.setCorreo(newDatos[3]);
+                    usuario.setFecha_nac(newDatos[4]);
+                    usuario.setTfno(Integer.parseInt(newDatos[5]));
+                    usuario.setImagen(newDatos[6]);
+                } else {
+                    usuario.setId(Integer.parseInt(newDatos[0]));
+                    usuario.setNombre(newDatos[1]);
+                    usuario.setCorreo(newDatos[3]);
+                    usuario.setFecha_nac(newDatos[4]);
+                    usuario.setTfno(Integer.parseInt(newDatos[5]));
+                }
+                nombre = usuario.getNombre();
+                contraseña = newDatos[1];
+                correo = usuario.getCorreo();
+                fecha_nac = usuario.getFecha_nac();
+                tfno = usuario.getTfno();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            textViewUser.setText(nombre);
+            String[] split_fecha = fecha_nac.split("-");
+            textViewBorn.setText(split_fecha[2] + "-" + split_fecha[1] + "-" + split_fecha[0]);
+            textViewEmail.setText(correo);
+            textViewPhone.setText(tfno + "");
+        }
+    }
+
+    class insertarImagenTask extends AsyncTask<Void, Void, Void>{
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try{
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("i_imagen");
+                dataOut.flush();
+                //System.out.println(usuario.getImagen());
+                dataOut.writeUTF(usuario.getNombre() + "¬" + usuario.getImagen());
+                dataOut.flush();
+                estado = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (estado.equalsIgnoreCase("correcto")) {
+                new AlertDialog.Builder(getContext())
+                        .setTitle(getString(R.string.correct))
+                        .setMessage("Se ha registrado satisfactoriamente")
+                        .show();
+            } else {
+                new AlertDialog.Builder(getContext())
+                        .setTitle(getString(R.string.incorrect))
+                        .setMessage("No se ha registrar")
+                        .show();
+            }
+        }
     }
 }

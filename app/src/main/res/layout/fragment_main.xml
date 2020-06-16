@@ -21,20 +21,14 @@
         android:textSize="20sp"
         android:textAlignment="center"/>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll_view_zone"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_next_trip"
         android:layout_width="match_parent"
-        android:layout_height="240dp">
-
-        <TextView
-            android:id="@+id/text_view_zone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="20sp"
-            android:textAlignment="textStart"
-            android:layout_marginLeft="20dp"/>
-    </androidx.core.widget.NestedScrollView>
+        android:layout_height="150dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="20dp"/>
 
     <TextView
         android:id="@+id/text_view_done"
@@ -44,18 +38,9 @@
         android:textSize="20sp"
         android:textAlignment="center"/>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll_view_done"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_done"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="20dp">
-
-        <TextView
-            android:id="@+id/text_view_trip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="20sp"
-            android:textAlignment="textStart"/>
-    </androidx.core.widget.NestedScrollView>
+        android:layout_margin="20dp"/>
 </LinearLayout>

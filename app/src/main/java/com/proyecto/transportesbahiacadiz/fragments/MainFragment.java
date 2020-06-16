@@ -2,6 +2,7 @@ package com.proyecto.transportesbahiacadiz.fragments;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,150 +12,115 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
-import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.proyecto.transportesbahiacadiz.adapters.TripAdapter;
+import com.proyecto.transportesbahiacadiz.adapters.ZoneAdapter;
 import com.proyecto.transportesbahiacadiz.dialogs.LocationDialog;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.model.Trip;
 import com.proyecto.transportesbahiacadiz.model.Zone;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
-
-/*import static com.proyecto.tucca.activities.MainActivity.cliente;
-import static com.proyecto.tucca.activities.MainActivity.dataIn;
-import static com.proyecto.tucca.activities.MainActivity.dataOut;*/
 
 public class MainFragment extends Fragment {
     private SearchView searchView = null;
     private SearchView.OnQueryTextListener queryTextListener;
-    private TextView zone;
-    private TextView zoneTitle;
+    private TextView title;
     private int size;
     private Zone[] zonas;
     private Trip[] trips;
-    private String[] nombreZonas;
     private String[] newDatos;
-    private NestedScrollView scrollViewNextTrip;
-    private NestedScrollView scrollViewDone;
+    private RecyclerView recyclerViewNextTrip;
+    private RecyclerView recyclerViewDone;
     private TextView textViewNextTrip;
     private TextView textViewDone;
-    private TextView textViewTrips;
+    private ZoneAdapter zoneAdapter;
+    private TripAdapter tripAdapter;
+    private RecyclerView.LayoutManager layoutManagerNextTrip;
+    private RecyclerView.LayoutManager layoutManagerDone;
+    private List<Zone> zones;
+    private List<String> viajesARealizar;
+    private List<String> viajesRealizados;
+    private String content;
+    private ConnectionClass connectionClass;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
-        zone = view.findViewById(R.id.text_view_zone);
-        scrollViewNextTrip = view.findViewById(R.id.scroll_view_zone);
-        scrollViewDone= view.findViewById(R.id.scroll_view_done);
-        textViewDone = view.findViewById(R.id.text_view_done);
+        recyclerViewNextTrip = view.findViewById(R.id.recycler_view_next_trip);
+        recyclerViewDone = view.findViewById(R.id.recycler_view_done);
         textViewNextTrip = view.findViewById(R.id.text_view_next_trip);
-        textViewTrips = view.findViewById(R.id.text_view_trip);
-        String content;
+        textViewDone = view.findViewById(R.id.text_view_done);
+        title = view.findViewById(R.id.text_view_fare_system_title);
+        zones = new ArrayList<>();
+        viajesARealizar = new ArrayList<>();
+        viajesRealizados = new ArrayList<>();
+        connectionClass = new ConnectionClass(getContext());
         if(login){
-            zoneTitle = view.findViewById(R.id.text_view_fare_system_title);
-            zoneTitle.setText("Historial de viajes");
-            try{
-                dataOut.writeUTF("viajes");
-                dataOut.flush();
-                dataOut.writeInt(usuario.getId());
-                dataOut.flush();
-                int size = dataIn.readInt();
-                trips = new Trip[size];
-                for(int i = 0; i < size; i++){
-                    String texto = dataIn.readUTF();
-                    String[] datos = texto.split("/");
-                    java.util.Date date = new java.util.Date();
-                    date.setTime(Long.parseLong(datos[3]));
-                    Trip trip = new Trip(datos[0], datos[1], datos[2], new Date(date.getTime()));
-                    trips[i] = trip;
-                }
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-YYY");
-                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm");
-                content = "";
-                java.util.Date d = new java.util.Date();
-                java.sql.Date date = new java.sql.Date(d.getTime());
-                System.out.println("Cantidad viajes " + trips.length);
-                for (int i = 0; i < trips.length; i++) {
-                    content += "- Línea: " + trips[i].getLinea() + " Municipio de destino: " + trips[i].getMunicipio() + " Hora de salida: " +
-                            trips[i].getHoraSalida() + "\n";
-                    String fechaActual = sdf.format(date);
-                    String fechaViaje = sdf.format(trips[i].getFechaViaje());
-                    if(compruebaFecha(fechaViaje, fechaActual)){
-                        String horaActual = sdfHora.format(date);
-                        /*System.out.println("fecha viaje: " + fechaViaje);
-                        System.out.println("fecha hoy: " + fechaActual);
-                        System.out.println("hora viaje: " + trips[i].getHoraSalida());
-                        System.out.println("hora hoy: " + horaActual);*/
-                        String respuesta = compruebaHora(trips[i].getHoraSalida(), horaActual);
-                        //System.out.println("Respuesta " + respuesta);
-                        if(respuesta.equals("mayor")){
-                            zone.append(content);
-                        }else {
-                            textViewTrips.append(content);
-                        }
-                    }else{
-                        textViewTrips.append(content);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            title.setText("Historial de viajes");
+            recyclerViewNextTrip.setHasFixedSize(true);
+            layoutManagerNextTrip = new LinearLayoutManager(getContext());
+            layoutManagerDone = new LinearLayoutManager(getContext());
+            recyclerViewNextTrip.setLayoutManager(layoutManagerNextTrip);
+            recyclerViewDone.setLayoutManager(layoutManagerDone);
+            getViajes();
         }else {
+            textViewNextTrip.setVisibility(View.GONE);
+            textViewDone.setVisibility(View.GONE);
+            recyclerViewDone.setVisibility(View.GONE);
             LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            //param.setMargins(20, 20, 20, 20);
-            scrollViewNextTrip.setLayoutParams(param);
-            textViewDone.setVisibility(View.INVISIBLE);
-            textViewNextTrip.setVisibility(View.INVISIBLE);
-            //zone = new TextView(getContext());
-            //scrollViewNextTrip.addView(zone);
-            try {
-                dataOut.writeUTF("zonas");
-                dataOut.flush();
-                //System.out.println(dataIn.readUTF());
-                size = dataIn.readInt();
-                //System.out.println(size);
-                zonas = new Zone[size];
-                for (int i = 0; i < size; i++) {
-                    String datos;
-                    try {
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("/");
-                        Zone zona = new Zone(newDatos[0], newDatos[1]);
-                        zonas[i] = zona;
-                    } catch (IOException ex) {
-                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                content = "";
-                for (int i = 0; i < zonas.length; i++) {
-                    content += zonas[i].getIdZona() + ": " + zonas[i].getNombreZona() + "\n";
-                }
-                zone.append(content);
-                //scrollViewNextTrip.addView(zone);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            recyclerViewNextTrip.setLayoutParams(param);
+            recyclerViewNextTrip.setHasFixedSize(true);
+            layoutManagerNextTrip = new LinearLayoutManager(getContext());
+            recyclerViewNextTrip.setLayoutManager(layoutManagerNextTrip);
+            getZonas();
         }
         return view;
+    }
+
+    private void getViajes(){
+        new getViajesTask().execute();
+    }
+
+    private void getZonas(){
+        new getZonasTask().execute();
+    }
+
+    private void buildRecyclerZonas(){
+        zoneAdapter = new ZoneAdapter((ArrayList<Zone>) zones);
+        recyclerViewNextTrip.setAdapter(zoneAdapter);
+    }
+
+    private void buildRecyclerProximosViajes(){
+        tripAdapter = new TripAdapter((ArrayList<String>) viajesARealizar);
+        recyclerViewNextTrip.setAdapter(tripAdapter);
+    }
+
+    private void buildRecyclerViajesRealizados(){
+        tripAdapter = new TripAdapter((ArrayList<String>) viajesRealizados);
+        recyclerViewDone.setAdapter(tripAdapter);
     }
 
     private boolean compruebaFecha(String fechaViaje, String hoy){
@@ -186,27 +152,6 @@ public class MainFragment extends Fragment {
         }
         return cad;
     }
-
-    /*private void conectar(){
-        final int PUERTO = 6000;
-        final String HOST = "192.168.1.13";
-        //"localhost";
-        int SDK_INT = android.os.Build.VERSION.SDK_INT;
-        if (SDK_INT > 8)
-        {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-            try {
-                cliente = new Socket(HOST, PUERTO);
-                dataOut = new DataOutputStream(cliente.getOutputStream());
-                dataIn = new DataInputStream(cliente.getInputStream());
-            } catch (IOException ex) {
-                Logger.getLogger(LoginFragment.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        }
-    }*/
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -276,36 +221,111 @@ public class MainFragment extends Fragment {
         new LocationDialog().show(getFragmentManager(), "Location Dialog");
     }
 
-    /*class TaskConectar extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            System.out.println("Conectando...");
-        }
+    class getViajesTask extends AsyncTask<Void, Void, Void>{
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
 
         @Override
         protected Void doInBackground(Void... voids) {
-            final int PUERTO = 6000;
-            final String HOST = "192.168.1.13";
-            int SDK_INT = android.os.Build.VERSION.SDK_INT;
-            if (SDK_INT > 8)
-            {
-                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                        .permitAll().build();
-                StrictMode.setThreadPolicy(policy);
-                try {
-                    System.out.println(PUERTO + " " + HOST);
-                    cliente = new Socket(HOST, PUERTO);
-                    System.out.println(cliente);
-                    dataOut = new DataOutputStream(cliente.getOutputStream());
-                    dataIn = new DataInputStream(cliente.getInputStream());
-                    //System.out.println(dataIn);
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginFragment.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            try{
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
 
+                dataOut.writeUTF("viajes");
+                dataOut.flush();
+                dataOut.writeInt(usuario.getId());
+                dataOut.flush();
+                int size = dataIn.readInt();
+                trips = new Trip[size];
+                for(int i = 0; i < size; i++){
+                    String texto = dataIn.readUTF();
+                    String[] datos = texto.split("/");
+                    java.util.Date date = new java.util.Date();
+                    date.setTime(Long.parseLong(datos[3]));
+                    Trip trip = new Trip(datos[0], datos[1], datos[2], new Date(date.getTime()));
+                    trips[i] = trip;
+                }
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-YYY");
+                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm");
+                java.util.Date d = new java.util.Date();
+                java.sql.Date date = new java.sql.Date(d.getTime());
+                System.out.println("Cantidad viajes " + trips.length);
+                for (int i = 0; i < trips.length; i++) {
+                    content = "- Línea: " + trips[i].getLinea() + " Municipio de destino: " + trips[i].getMunicipio() + " Hora de salida: " +
+                            trips[i].getHoraSalida() + " Fecha del viaje: " + sdf.format(trips[i].getFechaViaje()) + "\n";
+                    //viajes.add(content);
+                    String fechaActual = sdf.format(date);
+                    String fechaViaje = sdf.format(trips[i].getFechaViaje());
+                    if(compruebaFecha(fechaViaje, fechaActual)){
+                        String horaActual = sdfHora.format(date);
+                        String respuesta = compruebaHora(trips[i].getHoraSalida(), horaActual);
+                        if(respuesta.equals("mayor")){
+                            //viajes a realizar
+                            viajesARealizar.add(content);
+                        }else {
+                            //ya realizados
+                            viajesRealizados.add(content);
+                        }
+                    }else{
+                        //poner en viajes ya realizados
+                        viajesRealizados.add(content);
+                        //System.out.println(viajesRealizados.get(0));
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             return null;
         }
-    }*/
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            buildRecyclerProximosViajes();
+            buildRecyclerViajesRealizados();
+        }
+    }
+
+    class getZonasTask extends AsyncTask<ArrayList<Zone>, Void, List<Zone>> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected List<Zone> doInBackground(ArrayList<Zone>... arrayLists) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("zonas");
+                dataOut.flush();
+                size = dataIn.readInt();
+                zonas = new Zone[size];
+                for (int i = 0; i < size; i++) {
+                    String datos;
+                    try {
+                        datos = dataIn.readUTF();
+                        newDatos = datos.split("-");
+                        Zone zona = new Zone(newDatos[0], newDatos[1], newDatos[2]);
+                        //System.out.println(zona);
+                        zones.add(zona);
+                    } catch (IOException ex) {
+                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return zones;
+        }
+
+        @Override
+        protected void onPostExecute(List<Zone> zones) {
+            super.onPostExecute(zones);
+            buildRecyclerZonas();
+        }
+    }
 }

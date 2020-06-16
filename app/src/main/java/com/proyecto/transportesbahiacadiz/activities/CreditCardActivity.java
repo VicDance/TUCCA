@@ -8,6 +8,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -17,12 +18,14 @@ import com.proyecto.transportesbahiacadiz.dialogs.ReloadDialog;
 import com.proyecto.transportesbahiacadiz.model.CreditCard;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.adapters.CreditCardsAdapter;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
 public class CreditCardActivity extends AppCompatActivity implements CreditCardsAdapter.OnItemClickListener, CreditCardsAdapter.OnLongItemCliclListener {
     private RecyclerView recyclerView;
@@ -35,29 +38,20 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
     private String[] newDatos;
     private String newString;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private ConnectionClass connectionClass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_credit_card);
+        connectionClass = new ConnectionClass(this);
         creditCardItems = new ArrayList<CreditCard>();
-        try {
-            dataOut.writeUTF("tarjetas");
-            dataOut.flush();
-            size = dataIn.readInt();
-            CreditCard creditCard = null;
-            for(int i = 0; i < size; i++) {
-                String datos;
-                datos = dataIn.readUTF();
-                newDatos = datos.split("-");
-                creditCard = new CreditCard(newDatos[3], newDatos[0], newDatos[2]);
-                creditCardItems.add(creditCard);
-                //System.out.println(creditCard.getCardUser());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        buildRecycler();
+        new getTarjetasCreditoTask().execute();
+        creditCardItems.clear();
+        recyclerView = findViewById(R.id.recycler_view_credit_cards);
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
         btnNewCredit = findViewById(R.id.btn_new_credit_card);
         btnNewCredit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,36 +65,23 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                new getTarjetasCreditoTask().execute();
                 try {
-                    dataOut.writeUTF("tarjetas");
-                    dataOut.flush();
-                    size = dataIn.readInt();
                     creditCardItems.clear();
-                    CreditCard creditCard = null;
-                    for(int i = 0; i < size; i++) {
-                        String datos;
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("-");
-                        creditCard = new CreditCard(newDatos[3], newDatos[0], newDatos[2]);
-                        creditCardItems.add(creditCard);
-
-                        Thread.sleep(1000);
-                        swipeRefreshLayout.setRefreshing(false);
-
-                        buildRecycler();
-                    }
-                } catch (IOException | InterruptedException e) {
+                    recyclerView = findViewById(R.id.recycler_view_credit_cards);
+                    recyclerView.setHasFixedSize(true);
+                    layoutManager = new LinearLayoutManager(CreditCardActivity.this);
+                    recyclerView.setLayoutManager(layoutManager);
+                    Thread.sleep(1000);
+                    swipeRefreshLayout.setRefreshing(false);
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         });
     }
 
-    private void buildRecycler(){
-        recyclerView = findViewById(R.id.recycler_view_credit_cards);
-        recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+    private void buildRecycler() {
         adapter = new CreditCardsAdapter(creditCardItems, this, this);
         recyclerView.setAdapter(adapter);
     }
@@ -115,8 +96,8 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
     public void onItemClick(int position) {
         textView = findViewById(R.id.text_view_number_credit_card);
         Bundle extras = getIntent().getExtras();
-        if(extras == null) {
-            newString= null;
+        if (extras == null) {
+            newString = null;
         } else {
             newString = extras.getString("recarga");
             showDialog();
@@ -128,23 +109,14 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         showDeleteDialog(position);
     }
 
-    private void showDeleteDialog(final int position){
+    private void showDeleteDialog(final int position) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.textDeleteCard)
                 .setMessage(R.string.deleteCard)
                 .setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            dataOut.writeUTF("btarjetaCredito");
-                            dataOut.flush();
-                            dataOut.writeInt(position);
-                            dataOut.flush();
-                            creditCardItems.remove(position);
-                            adapter.notifyItemRemoved(position);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        new borrarTarjetaTask(position).execute();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -154,5 +126,80 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
                     }
                 })
                 .show();
+    }
+
+    class getTarjetasCreditoTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                creditCardItems.clear();
+                dataOut.writeUTF("tarjetas");
+                dataOut.flush();
+                size = dataIn.readInt();
+                CreditCard creditCard = null;
+                for (int i = 0; i < size; i++) {
+                    String datos;
+                    datos = dataIn.readUTF();
+                    newDatos = datos.split("-");
+                    creditCard = new CreditCard(newDatos[3], newDatos[0], newDatos[2]);
+                    creditCardItems.add(creditCard);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            buildRecycler();
+        }
+    }
+
+    class borrarTarjetaTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        private int position;
+
+        public borrarTarjetaTask(int position){
+            this.position = position;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("btarjetaCredito");
+                dataOut.flush();
+                dataOut.writeInt(position);
+                dataOut.flush();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            creditCardItems.remove(position);
+            adapter.notifyItemRemoved(position);
+        }
     }
 }

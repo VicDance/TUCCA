@@ -1,4 +1,4 @@
-package com.proyecto.transportesbahiacadiz;
+package com.proyecto.transportesbahiacadiz.interfaces;
 
 import com.proyecto.transportesbahiacadiz.model.FareList;
 import com.proyecto.transportesbahiacadiz.model.GapList;

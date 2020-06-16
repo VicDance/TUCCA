@@ -9,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -29,18 +30,21 @@ import android.widget.TextView;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.CreditCardActivity;
 import com.proyecto.transportesbahiacadiz.model.CodigoQR;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
 import net.glxn.qrgen.android.QRCode;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static com.proyecto.transportesbahiacadiz.activities.AddCardActivity.codigoQR;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class CardDialog extends DialogFragment {
@@ -50,9 +54,9 @@ public class CardDialog extends DialogFragment {
     private Button btnQr;
     private ImageView imageViewQr;
     private TextView textView;
+    private TextView textViewPrecio;
     private String saldoYDescuento;
     private String numtarjeta;
-    private String message;
     double saldo;
     double descuento;
     private double bs;
@@ -62,6 +66,9 @@ public class CardDialog extends DialogFragment {
     int cont;
     static String contenidoQR;
     private String horaCodigo;
+    private double costeBillete;
+    private int numBilletes;
+    private ConnectionClass connectionClass;
 
     @Nullable
     @Override
@@ -78,36 +85,20 @@ public class CardDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_card, null);
+        connectionClass = new ConnectionClass(getActivity());
         textView = view.findViewById(R.id.text_view_balance);
         btnQr = view.findViewById(R.id.btn_qr);
         imageViewQr = view.findViewById(R.id.image_view_qr);
         imageViewQr.setVisibility(View.GONE);
-        /*if(getCodigo() != null){
-            contenidoQR += "Hora última utilización " + codigoQR.getHora_utilizacion() + "\n"
-                    + "Hora de salida " + codigoQR.getHora_salida() + "\n"
-                    + "Municipio de destino " + codigoQR.getNombreMunicipio() + "\n"
-                    + "Tarjeta tipo " + codigoQR.getTipoTarjeta();
-        }*/
-        try {
-            numtarjeta = dataIn.readUTF();
-            saldoYDescuento = dataIn.readUTF();
-            saldo = Double.parseDouble(saldoYDescuento.split("/")[0]);
-            descuento = Double.parseDouble(saldoYDescuento.split("/")[1]);
-            System.out.println("saldo" + saldo + "descuento " + descuento);
-            textView.setText(saldo + "");
 
-            dataOut.writeUTF("codigo");
-            dataOut.flush();
-            dataOut.writeUTF(numtarjeta);
-            dataOut.flush();
-            contenidoQR = dataIn.readUTF();
-            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
-            imageViewQr.setImageBitmap(bitmap);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Saldo: " + saldo);
+        System.out.println("Descuento: " + descuento);
+        textView.setText(saldo + " €");
+
+        new getCodigoQRTask().execute();
+
         btnPay = view.findViewById(R.id.btn_pay);
-        if(bs == 0){
+        if (bs == 0) {
             btnPay.setVisibility(View.INVISIBLE);
         }
         btnreload = view.findViewById(R.id.btn_reload);
@@ -149,18 +140,32 @@ public class CardDialog extends DialogFragment {
         return builder.create();
     }
 
-    public void setMessage(String message){
-        this.message = message;
+    public void setNumtarjeta(String numtarjeta) {
+        this.numtarjeta = numtarjeta;
     }
 
-    public void setBs(double bs){
+    public void setBs(double bs) {
         this.bs = bs;
     }
 
-    public void setMunicipio(String municipio){this.municipio = municipio;}
+    public void setMunicipio(String municipio) {
+        this.municipio = municipio;
+    }
 
-    public void setHoraSalida(String hora_salida){
+    public void setHoraSalida(String hora_salida) {
         this.hora_salida = hora_salida;
+    }
+
+    public void setNumBilletes(int numBilletes) {
+        this.numBilletes = numBilletes;
+    }
+
+    public void setSaldo(double saldo){
+        this.saldo = saldo;
+    }
+
+    public void setDescuento(double descuento){
+        this.descuento = descuento;
     }
 
     private void compruebaPosicion() {
@@ -188,59 +193,50 @@ public class CardDialog extends DialogFragment {
                     //System.out.println("entra comprueba");
                     if (cont == 1) {
                         //System.out.println(cont);
-                        if (saldo < bs) {
+                        if (saldo < (bs - (bs * descuento)) * numBilletes) {
                             new AlertDialog.Builder(getContext())
                                     .setTitle(R.string.attention)
                                     .setMessage(R.string.no_money)
                                     .show();
                             mediaPlayer = MediaPlayer.create(getContext(), R.raw.error);
                             mediaPlayer.start();
-                        }else {
+                        } else {
                             String tipoTarjeta = "";
                             if (descuento == 0.1) {
-                                saldo = saldo - (bs * 0.9);
+                                costeBillete = (bs * 0.9) * numBilletes;
+                                saldo = saldo - costeBillete;
                                 tipoTarjeta = "estándar";
                             } else if (descuento == 0.5) {
-                                saldo = saldo - (bs * 0.5);
+                                costeBillete = (bs * 0.5) * numBilletes;
+                                saldo = saldo - costeBillete;
                                 tipoTarjeta = "estudiante";
                             } else if (descuento == 0.3) {
-                                saldo = saldo - (bs * 0.7);
+                                costeBillete = (bs * 0.7) * numBilletes;
+                                saldo = saldo - costeBillete;
                                 tipoTarjeta = "jubilado";
                             }
-                            try {
-                                dataOut.writeUTF("actualiza_saldo");
-                                dataOut.flush();
-                                dataOut.writeUTF(saldo + "/" + numtarjeta /*+ "/" + descuento + "/" + bs*/);
-                                dataOut.flush();
-                                String estado = dataIn.readUTF();
-                                if (estado.equalsIgnoreCase("correcto")) {
-                                    mediaPlayer = MediaPlayer.create(getContext(), R.raw.beep);
-                                    mediaPlayer.start();
-                                    cont++;
 
-                                    //TODO generar codigo qr
-                                    DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-                                    java.util.Date horaActual = new java.util.Date();
-                                    horaCodigo = dateFormat.format(horaActual);
-                                    contenidoQR = "Hora última utilización " + horaCodigo + "\n"
-                                            + "Hora de salida " + hora_salida + "\n"
-                                            + "Municipio de destino " + municipio + "\n"
-                                            + "Tarjeta tipo " + tipoTarjeta;
-                                    System.out.println("hora codigo " + horaCodigo);
-                                    setCodigo();
-                                    Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
-                                    imageViewQr.setImageBitmap(bitmap);
-                                    btnQr.setVisibility(View.VISIBLE);
-                                    dataOut.writeUTF("actualiza_codigo");
-                                    dataOut.flush();
-                                    dataOut.writeUTF(horaCodigo + "/" + numtarjeta + "/" + contenidoQR);
-                                    dataOut.flush();
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            } catch (Throwable throwable) {
-                                throwable.printStackTrace();
-                            }
+                            new actualizaSaldoTask().execute();
+                            mediaPlayer = MediaPlayer.create(getContext(), R.raw.beep);
+                            mediaPlayer.start();
+                            cont++;
+
+                            //generar codigo qr
+                            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+                            java.util.Date horaActual = new java.util.Date();
+                            horaCodigo = dateFormat.format(horaActual);
+                            contenidoQR = "Hora última utilización " + horaCodigo + "\n"
+                                    + "Hora de salida " + hora_salida + "\n"
+                                    + "Municipio de destino " + municipio + "\n"
+                                    + "Tarjeta tipo " + tipoTarjeta;
+                            System.out.println("hora codigo " + horaCodigo);
+                            setCodigo();
+                            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).withCharset("UTF-8").bitmap();
+                            imageViewQr.setImageBitmap(bitmap);
+                            btnQr.setVisibility(View.VISIBLE);
+
+                            new actualizaCodigoTask().execute();
+
                         }
                     }
                 }
@@ -254,22 +250,96 @@ public class CardDialog extends DialogFragment {
         sensorManager.registerListener(sensorEventListener, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    private void setCodigo(){
+    private void setCodigo() {
         codigoQR = new CodigoQR();
         codigoQR.setHora_utilizacion(horaCodigo);
         codigoQR.setHora_salida(hora_salida);
         codigoQR.setMensaje(contenidoQR);
-        /*codigoQR.setNombreMunicipio(municipio);
-        codigoQR.setTipoTarjeta(tipoTarjeta);*/
     }
 
-    private CodigoQR getCodigo(){
-        codigoQR = new CodigoQR();
-        codigoQR.setHora_utilizacion(codigoQR.getHora_utilizacion());
-        codigoQR.setHora_salida(codigoQR.getHora_salida());
-        /*codigoQR.setNombreMunicipio(codigoQR.getNombreMunicipio());
-        codigoQR.setTipoTarjeta(codigoQR.getTipoTarjeta());*/
+    class getCodigoQRTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
 
-        return codigoQR;
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("codigo");
+                dataOut.flush();
+                dataOut.writeUTF(numtarjeta);
+                dataOut.flush();
+                contenidoQR = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
+            imageViewQr.setImageBitmap(bitmap);
+        }
+    }
+
+    class actualizaSaldoTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("actualiza_saldo");
+                dataOut.flush();
+                dataOut.writeUTF(saldo + "/" + numtarjeta);
+                dataOut.flush();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    class actualizaCodigoTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("actualiza_codigo");
+                dataOut.flush();
+                dataOut.writeUTF(horaCodigo + "/" + numtarjeta + "/" + contenidoQR);
+                dataOut.flush();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 }

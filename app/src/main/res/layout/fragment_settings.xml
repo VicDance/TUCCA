@@ -1,0 +1,57 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.proyecto.transportesbahiacadiz.fragments.SettingsFragment"
+    android:layout_margin="10dp">
+
+    <TextView
+        android:id="@+id/text_view_settings_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/setting_fragment_title"
+        android:textSize="15sp"/>
+
+    <TextView
+        android:id="@+id/text_view_subject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_view_settings_title"
+        android:layout_marginTop="30dp"
+        android:text="@string/subject"
+        android:textStyle="bold"/>
+
+    <EditText
+        android:id="@+id/edit_text_subject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_view_subject"
+        android:inputType="textEmailSubject"/>
+
+    <TextView
+        android:id="@+id/text_view_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/edit_text_subject"
+        android:layout_marginTop="30dp"
+        android:text="@string/text"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/edit_text_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_view_text"
+        android:inputType="textLongMessage"/>
+
+    <Button
+        android:id="@+id/button_contact_admin"
+        android:layout_width="320dp"
+        android:layout_height="60dp"
+        android:background="@drawable/rounded_button"
+        android:layout_centerHorizontal="true"
+        android:text="@string/contact"
+        android:textSize="17sp"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="400dp"/>
+</RelativeLayout>

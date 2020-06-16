@@ -49,13 +49,27 @@
                 android:inputType="textPassword"
                 android:maxLines="1"/>
 
-            <RadioButton
-                android:id="@+id/radio_no_close"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:layout_marginTop="20dp"
-                android:text="No cerrar sesión"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/radio_no_close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="20dp"
+                    android:text="No cerrar sesión"/>
+
+                <ImageButton
+                    android:id="@+id/button_select_ip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_settings_blue"
+                    android:layout_marginLeft="50dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@android:color/transparent"/>
+            </LinearLayout>
         </LinearLayout>
 
         <Button

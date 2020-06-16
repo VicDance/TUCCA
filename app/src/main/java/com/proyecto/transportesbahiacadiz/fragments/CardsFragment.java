@@ -2,6 +2,7 @@ package com.proyecto.transportesbahiacadiz.fragments;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,12 +27,14 @@ import com.proyecto.transportesbahiacadiz.model.CardItem;
 import com.proyecto.transportesbahiacadiz.adapters.CardsAdapter;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.AddCardActivity;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 
 public class CardsFragment extends Fragment {
@@ -48,6 +51,11 @@ public class CardsFragment extends Fragment {
     private String horaSalida;
     private int destino;
     private String nombreMunicipio;
+    private int numBilletes;
+    private ConnectionClass connectionClass;
+    private String saldoYDescuento;
+    private String numtarjeta;
+    private String estado;
 
     public CardsFragment() {
     }
@@ -56,62 +64,35 @@ public class CardsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_cards, container, false);
-        if(getArguments() != null){
+        connectionClass = new ConnectionClass(getContext());
+        if (getArguments() != null) {
             bs = getArguments().getDouble("pagar");
             horaSalida = getArguments().getString("salida");
             destino = getArguments().getInt("destino");
-            try {
-                dataOut.writeUTF("nombre_municipio");
-                dataOut.flush();
-                dataOut.writeInt(destino);
-                dataOut.flush();
-                nombreMunicipio = dataIn.readUTF();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            numBilletes = getArguments().getInt("billetes");
+            new getNombreMunicipioTask().execute();
             //System.out.println(bs);
         }
         swipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         cardItemList = new ArrayList<CardItem>();
-        try {
-            dataOut.writeUTF("tarjetasb");
-            dataOut.flush();
-            size = dataIn.readInt();
-            for (int i = 0; i < size; i++) {
-                String datos;
-                datos = dataIn.readUTF();
-                newDatos = datos.split("/");
-                cardItemList.add(new CardItem(newDatos[0], newDatos[newDatos.length - 1]));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new getTarjetasBusTask().execute();
         recyclerView = view.findViewById(R.id.recycler_view_cards);
-        if (login) {
-            buildRecycler();
-        } else {
-            textView = view.findViewById(R.id.text_view_no_login);
-            textView.setText("Debes estar conectado para guardar tarjetas");
-        }
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(getContext());
+        recyclerView.setLayoutManager(layoutManager);
+
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                new getTarjetasBusTask().execute();
                 try {
-                    dataOut.writeUTF("tarjetasb");
-                    dataOut.flush();
-                    size = dataIn.readInt();
-                    cardItemList.clear();
-                    for (int i = 0; i < size; i++) {
-                        String datos;
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("/");
-                        cardItemList.add(new CardItem(newDatos[0], newDatos[newDatos.length - 1]));
-                    }
-                    buildRecycler();
+                    recyclerView.setHasFixedSize(true);
+                    layoutManager = new LinearLayoutManager(getContext());
+                    recyclerView.setLayoutManager(layoutManager);
                     Thread.sleep(1000);
                     swipeRefreshLayout.setRefreshing(false);
-                } catch (IOException | InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -131,23 +112,7 @@ public class CardsFragment extends Fragment {
                         .setMessage(R.string.textDeleteCard)
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    dataOut.writeUTF("btarjetaBus");
-                                    dataOut.flush();
-                                    dataOut.writeInt(viewHolder.getAdapterPosition());
-                                    dataOut.flush();
-                                    String estado = dataIn.readUTF();
-                                    if(estado.equalsIgnoreCase("correcto")){
-                                        new AlertDialog.Builder(getContext())
-                                                .setTitle(R.string.correct)
-                                                .setMessage("Borrado existoso")
-                                                .show();
-                                    }
-                                    cardItemList.remove(viewHolder.getAdapterPosition());
-                                    adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                new borrarTarjetaTask(viewHolder.getAdapterPosition()).execute();
                             }
                         })
                         .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -165,26 +130,12 @@ public class CardsFragment extends Fragment {
     }
 
     private void buildRecycler() {
-        recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(layoutManager);
         adapter = new CardsAdapter(cardItemList);
         recyclerView.setAdapter(adapter);
         adapter.setOnItemClickListener(new CardsAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                //textView = view.findViewById(R.id.text_view_number_card);
-                //System.out.println(cardItemList.get(position).getTextNumber());
-                try {
-                    dataOut.writeUTF("tarjeta");
-                    dataOut.flush();
-                    //textView = view.findViewById(R.id.text_view_number_card);
-                    dataOut.writeUTF(cardItemList.get(position).getTextNumber());
-                    dataOut.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                showDialog();
+                new getTarjetaTask(position).execute();
             }
         });
     }
@@ -228,6 +179,139 @@ public class CardsFragment extends Fragment {
         cardDialog.setBs(bs);
         cardDialog.setMunicipio(nombreMunicipio);
         cardDialog.setHoraSalida(horaSalida);
+        cardDialog.setNumBilletes(numBilletes);
+        String[] split = saldoYDescuento.split("/");
+        cardDialog.setSaldo(Double.parseDouble(split[0]));
+        cardDialog.setDescuento(Double.parseDouble(split[1]));
+        cardDialog.setNumtarjeta(numtarjeta);
         cardDialog.show(getFragmentManager(), "Card Dialog");
+    }
+
+    class getNombreMunicipioTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("nombre_municipio");
+                dataOut.flush();
+                dataOut.writeInt(destino);
+                dataOut.flush();
+                nombreMunicipio = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    class getTarjetasBusTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                cardItemList.clear();
+                dataOut.writeUTF("tarjetasb");
+                dataOut.flush();
+                size = dataIn.readInt();
+                for (int i = 0; i < size; i++) {
+                    String datos;
+                    datos = dataIn.readUTF();
+                    newDatos = datos.split("/");
+                    cardItemList.add(new CardItem(newDatos[0], newDatos[newDatos.length - 1]));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            buildRecycler();
+        }
+    }
+
+    class borrarTarjetaTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        private int position;
+
+        public borrarTarjetaTask(int position) {
+            this.position = position;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("btarjetaBus");
+                dataOut.flush();
+                dataOut.writeInt(position);
+                dataOut.flush();
+                //estado = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    class getTarjetaTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        private int position;
+
+        public getTarjetaTask(int position) {
+            this.position = position;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("tarjeta");
+                dataOut.flush();
+                //textView = view.findViewById(R.id.text_view_number_card);
+                dataOut.writeUTF(cardItemList.get(position).getTextNumber());
+                dataOut.flush();
+
+                numtarjeta = dataIn.readUTF();
+                saldoYDescuento = dataIn.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            showDialog();
+        }
     }
 }

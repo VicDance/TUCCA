@@ -11,14 +11,13 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
-import com.proyecto.transportesbahiacadiz.FareSystemAPI;
+import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.Settings;
+import com.proyecto.transportesbahiacadiz.util.Settings;
 import com.proyecto.transportesbahiacadiz.model.Fare;
 import com.proyecto.transportesbahiacadiz.model.FareList;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -27,7 +26,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.proyecto.transportesbahiacadiz.Settings.saltos_billete;
+import static com.proyecto.transportesbahiacadiz.util.Settings.saltos_billete;
 
 public class FareFragment extends Fragment {
     private View view;
@@ -47,11 +46,7 @@ public class FareFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_fare, container, false);
         tableLayout = view.findViewById(R.id.tlGridTable);
-        if(saltos_billete.isEmpty()) {
-            cogeDatosAPI();
-        }else{
-            //TODO 2- Crear metodo para crear columnas sin recurrir a array fare
-        }
+        cogeDatosAPI();
         return view;
     }
 

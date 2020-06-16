@@ -28,10 +28,17 @@ import com.proyecto.transportesbahiacadiz.fragments.MeFragment;
 import com.proyecto.transportesbahiacadiz.fragments.NewsFragment;
 import com.proyecto.transportesbahiacadiz.fragments.PlacesFragment;
 import com.proyecto.transportesbahiacadiz.fragments.SalePointFragment;
+import com.proyecto.transportesbahiacadiz.fragments.SettingsFragment;
 import com.proyecto.transportesbahiacadiz.fragments.TripFragment;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
+import com.proyecto.transportesbahiacadiz.util.Connection;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
@@ -45,11 +52,14 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawerLayout;
     private ImageView userImage;
     private int id;
+    private ConnectionClass connectionClass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
+
+        connectionClass = new ConnectionClass(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -85,11 +95,13 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                     double bs = extras.getDouble("pagar");
                     String hora_salida = extras.getString("salida");
                     int destino = extras.getInt("destino");
+                    int billetes = extras.getInt("billetes");
                     //newString= extras.getString("pagar");
                     Bundle bundle = new Bundle();
                     bundle.putDouble("pagar", bs);
                     bundle.putString("salida", hora_salida);
                     bundle.putInt("destino", destino);
+                    bundle.putInt("billetes", billetes);
                     CardsFragment cardsFragment = new CardsFragment();
                     cardsFragment.setArguments(bundle);
                     new TaskCambiarFragment().execute(cardsFragment);
@@ -105,7 +117,9 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getUser(){
-        String datos = null;
+        getUserTask getUserTask = new getUserTask();
+        getUserTask.execute();
+        /*String datos = null;
         String newDatos[];
         try {
             dataOut.writeUTF("cliente");
@@ -133,7 +147,7 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
             }
         }catch (Exception e){
             e.printStackTrace();
-        }
+        }*/
     }
 
     private Bitmap convertStringToBitmap(String url){
@@ -173,13 +187,11 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 new TaskCambiarFragment().execute(new NewsFragment());
                 break;
             case R.id.nav_places:
-                try {
-                    dataOut.writeUTF("lugares_interes");
-                    dataOut.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 new TaskCambiarFragment().execute(new PlacesFragment());
+                break;
+
+            case R.id.nav_settings:
+                new TaskCambiarFragment().execute(new SettingsFragment());
                 break;
         }
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -201,6 +213,50 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
         protected String doInBackground(Fragment... fragments) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragments[0]).commit();
             return fragments[0].toString();
+        }
+    }
+
+    class getUserTask extends AsyncTask<Void, Void, Void>{
+        Socket cliente = null;
+        DataOutputStream dataOut = null;
+        DataInputStream dataIn = null;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                String datos;
+                String[] newDatos;
+                dataOut.writeUTF("cliente");
+                dataOut.flush();
+                dataOut.writeUTF(getDatos(MenuActivity.this));
+                dataOut.flush();
+                datos = dataIn.readUTF();
+                newDatos = datos.split("¬");
+                usuario = new Usuario();
+                //System.out.println(datos);
+                if(newDatos.length == 7) {
+                    usuario.setId(Integer.parseInt(newDatos[0]));
+                    usuario.setNombre(newDatos[1]);
+                    usuario.setCorreo(newDatos[3]);
+                    usuario.setFecha_nac(newDatos[4]);
+                    usuario.setTfno(Integer.parseInt(newDatos[5]));
+                    //usuario.setImagen(newDatos[6]);
+                    //usuario.setImagen(newDatos[5]);
+                }else{
+                    usuario.setId(Integer.parseInt(newDatos[0]));
+                    usuario.setNombre(newDatos[1]);
+                    usuario.setCorreo(newDatos[3]);
+                    usuario.setFecha_nac(newDatos[4]);
+                    usuario.setTfno(Integer.parseInt(newDatos[5]));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 }

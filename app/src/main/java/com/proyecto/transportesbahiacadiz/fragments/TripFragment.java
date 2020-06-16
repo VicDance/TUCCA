@@ -3,8 +3,10 @@ package com.proyecto.transportesbahiacadiz.fragments;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +19,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,8 +31,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.proyecto.transportesbahiacadiz.FareSystemAPI;
-import com.proyecto.transportesbahiacadiz.Settings;
+import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.activities.StopsActivity;
 import com.proyecto.transportesbahiacadiz.model.Centre;
 import com.proyecto.transportesbahiacadiz.model.City;
@@ -40,10 +40,14 @@ import com.proyecto.transportesbahiacadiz.model.Fare;
 import com.proyecto.transportesbahiacadiz.model.FareList;
 import com.proyecto.transportesbahiacadiz.model.Gap;
 import com.proyecto.transportesbahiacadiz.model.GapList;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCity;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -55,8 +59,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.proyecto.transportesbahiacadiz.Settings.saltos;
-import static com.proyecto.transportesbahiacadiz.Settings.saltos_billete;
+import static com.proyecto.transportesbahiacadiz.util.Settings.saltos_billete;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
@@ -81,6 +84,7 @@ public class TripFragment extends Fragment {
     private Button btnSearch;
     private Button btnPay;
     private TextView textViewLines;
+    private TextView textViewPrice;
     private int size;
     private String[] newDatos;
     private LiveDataCity liveDataCity;
@@ -97,17 +101,32 @@ public class TripFragment extends Fragment {
     private Gap[] gaps;
     private int saltos;
     private double bs;
+    private ConnectionClass connectionClass;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_trip, container, false);
+        textViewPrice = view.findViewById(R.id.text_view_price);
+        connectionClass = new ConnectionClass(getContext());
         listarMunicipios();
         btnSearch = view.findViewById(R.id.btn_search_trip);
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /*if(login) {
+                    showDialog(idCiudadOrigen, idCiudadDestino, idNucleoOrigen, idNucleoDestino, nucleoOrigen, nucleoDestino, bs);
+                }else{
+                    startActivity(new Intent(getContext(), StopsActivity.class)
+                            .putExtra("ciudadOrigen", idCiudadOrigen)
+                            .putExtra("ciudadDestino", idCiudadDestino)
+                            .putExtra("nucleoOrigen", idNucleoOrigen)
+                            .putExtra("nucleoDestino", idNucleoDestino)
+                            .putExtra("nombreNucleoOrigen", nucleoOrigen)
+                            .putExtra("nombreNucleoDestino", nucleoDestino)
+                            .putExtra("precio", bs));
+                }*/
                 startActivity(new Intent(getContext(), StopsActivity.class)
                         .putExtra("ciudadOrigen", idCiudadOrigen)
                         .putExtra("ciudadDestino", idCiudadDestino)
@@ -118,41 +137,18 @@ public class TripFragment extends Fragment {
                         .putExtra("precio", bs));
             }
         });
-        //btnPay = view.findViewById(R.id.btn_pay_trip);
-        /*btnPay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getContext(), "Pagar viaje", Toast.LENGTH_SHORT).show();
-            }
-        });*/
         return view;
     }
 
-    private void listarMunicipios() {
-        try {
-            dataOut.writeUTF("municipios");
-            dataOut.flush();
-            size = dataIn.readInt();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        listaMunicipios = new City[size];
-        listaNombreMunicipios = new String[size];
-        for (int i = 0; i < size; i++) {
-            String datos;
-            try {
-                datos = dataIn.readUTF();
-                newDatos = datos.split("/");
-                City city = new City(Integer.parseInt(newDatos[0]), newDatos[1]);
-                listaMunicipios[i] = city;
-                listaNombreMunicipios[i] = city.getNombreMunicipio();
-            } catch (IOException ex) {
-                Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    /*private void showDialog(int idCiudadOrigen, int idCiudadDestino, int idNucleoOrigen, int idNucleoDestino, String nucleoOrigen, String nucleoDestino
+    , double bs){
+        final NumberPickerDialog dialog = new NumberPickerDialog(idCiudadOrigen, idCiudadDestino, idNucleoOrigen, idNucleoDestino, nucleoOrigen,
+                nucleoDestino, bs);
+        dialog.show(getFragmentManager(), "NumberPicker");
+    }*/
 
-        setSpinnerOriginCity();
-        setSpinnerDestinyCity();
+    private void listarMunicipios() {
+        new getMunicipiosTask().execute();
     }
 
     private void setSpinnerOriginCity() {
@@ -185,8 +181,7 @@ public class TripFragment extends Fragment {
                     }
                 });
 
-                listarNucleos(idCiudadOrigen);
-                setSpinnerOriginCentre();
+                new getNucleosTask(idCiudadOrigen, 1).execute();
             }
 
             @Override
@@ -225,8 +220,8 @@ public class TripFragment extends Fragment {
                         adapterOriginCentre.notifyDataSetChanged();
                     }
                 });
-                listarNucleos(idCiudadDestino);
-                setSpinnerDestinyCentre();
+
+                new getNucleosTask(idCiudadDestino, 2).execute();
             }
 
             @Override
@@ -234,42 +229,6 @@ public class TripFragment extends Fragment {
 
             }
         });
-    }
-
-    private void listarNucleos(int idMunicipio) {
-        int contNucleos = 0;
-        try {
-            dataOut.writeUTF("nucleos");
-            dataOut.flush();
-            size = dataIn.readInt();
-            listaNucleos = new Centre[size];
-            for (int i = 0; i < size; i++) {
-                try {
-                    String datos = dataIn.readUTF();
-                    newDatos = datos.split("/");
-                    Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
-                    listaNucleos[i] = centre;
-                } catch (IOException ex) {
-                    Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            for (int j = 0; j < listaNucleos.length; j++) {
-                if (idMunicipio == listaNucleos[j].getIdMunicipio()) {
-                    contNucleos++;
-                }
-            }
-            listaNombreNucleos = new String[contNucleos];
-            int ind = 0;
-            for (int j = 0; j < listaNucleos.length; j++) {
-                if (idMunicipio == listaNucleos[j].getIdMunicipio()) {
-                    listaNombreNucleos[ind] = listaNucleos[j].getNombreNucleo();
-                    ind++;
-                }
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
     }
 
     public void setSpinnerOriginCentre() {
@@ -343,7 +302,6 @@ public class TripFragment extends Fragment {
                     cogeSaltosAPI();
                 } else {
                     cogeSaltosAPI();
-                    //cogePrecioBillete(saltos);
                 }
             }
 
@@ -418,10 +376,10 @@ public class TripFragment extends Fragment {
 
     private void cogePrecioBillete(int salto) {
         for (Map.Entry<Integer, Double> entry : saltos_billete.entrySet()) {
-            //System.out.println(entry.getKey() + ":" + entry.getValue());
             if (entry.getKey() == salto) {
                 bs = entry.getValue();
-                System.out.println("Billete" + bs);
+                System.out.println("Bs " + bs);
+                textViewPrice.setText(getString(R.string.price) + " " + bs + "€");
             }
         }
     }
@@ -429,8 +387,6 @@ public class TripFragment extends Fragment {
     private void obtieneSaltos() {
         for (int i = 0; i < gaps.length; i++) {
             if (zonaDestino.equalsIgnoreCase(gaps[i].getZonaOrigen()) && zonaOrigen.equalsIgnoreCase(gaps[i].getZonaDestino())) {
-                //TextView textViewSaltos = view.findViewById(R.id.text_view_gap);
-                //textViewSaltos.setText(gaps[i].getSaltos() + "");
                 saltos = gaps[i].getSaltos();
                 System.out.println("Saltos: " + saltos);
             }
@@ -487,5 +443,127 @@ public class TripFragment extends Fragment {
         }
         searchView.setOnQueryTextListener(queryTextListener);
         return super.onOptionsItemSelected(item);
+    }
+
+    class getMunicipiosTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("municipios");
+                dataOut.flush();
+                size = dataIn.readInt();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            int SDK_INT = android.os.Build.VERSION.SDK_INT;
+            if (SDK_INT > 8) {
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                        .permitAll().build();
+                StrictMode.setThreadPolicy(policy);
+                listaMunicipios = new City[size];
+                listaNombreMunicipios = new String[size];
+                for (int i = 0; i < size; i++) {
+                    String datos;
+                    try {
+                        datos = dataIn.readUTF();
+                        newDatos = datos.split("/");
+                        City city = new City(Integer.parseInt(newDatos[0]), newDatos[1]);
+                        listaMunicipios[i] = city;
+                        listaNombreMunicipios[i] = city.getNombreMunicipio();
+                    } catch (IOException ex) {
+                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                setSpinnerOriginCity();
+                setSpinnerDestinyCity();
+            }
+        }
+    }
+
+    class getNucleosTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+        private int idMun;
+        private int nucleo;
+
+        public getNucleosTask(int idMunicipio, int nucleo){
+            this.idMun = idMunicipio;
+            this.nucleo = nucleo;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("nucleos");
+                dataOut.flush();
+                size = dataIn.readInt();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            int SDK_INT = android.os.Build.VERSION.SDK_INT;
+            if (SDK_INT > 8) {
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                        .permitAll().build();
+                StrictMode.setThreadPolicy(policy);
+                listaNucleos = new Centre[size];
+                for (int i = 0; i < size; i++) {
+                    try {
+                        String datos = dataIn.readUTF();
+                        newDatos = datos.split("/");
+                        Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
+                        listaNucleos[i] = centre;
+                        //System.out.println(listaNucleos[i]);
+                    } catch (IOException ex) {
+                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                int contNucleos = 0;
+                for (int j = 0; j < listaNucleos.length; j++) {
+                    if (idMun == listaNucleos[j].getIdMunicipio()) {
+                        contNucleos++;
+                    }
+                }
+                listaNombreNucleos = new String[contNucleos];
+                int ind = 0;
+                for (int j = 0; j < listaNucleos.length; j++) {
+                    if (idMun == listaNucleos[j].getIdMunicipio()) {
+                        listaNombreNucleos[ind] = listaNucleos[j].getNombreNucleo();
+                        ind++;
+                    }
+                }
+
+                if(nucleo == 1){
+                    setSpinnerOriginCentre();
+                }else{
+                    setSpinnerDestinyCentre();
+                }
+            }
+        }
     }
 }

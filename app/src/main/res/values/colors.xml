@@ -3,4 +3,6 @@
     <color name="colorPrimary">#5dade2</color>
     <color name="colorPrimaryDark">#154360</color>
     <color name="colorAccent">#03DAC5</color>
+    <color name="alerter_login">#EBFF5722</color>
+    <color name="black">#000000</color>
 </resources>

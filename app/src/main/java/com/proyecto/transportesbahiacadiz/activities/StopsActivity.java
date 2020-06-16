@@ -6,6 +6,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -18,8 +19,9 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.proyecto.transportesbahiacadiz.FareSystemAPI;
+import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
+import com.proyecto.transportesbahiacadiz.dialogs.NumberPickerDialog;
 import com.proyecto.transportesbahiacadiz.model.Horario;
 import com.proyecto.transportesbahiacadiz.model.HorarioList;
 import com.proyecto.transportesbahiacadiz.model.Segment;
@@ -61,6 +63,8 @@ public class StopsActivity extends AppCompatActivity {
     private int idLinea = 0;
     private String horaSalida;
     private String horaLlegada;
+    private List<TextView> textViews;
+    private int lineasSize;
 
     private Button btnPay;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -73,6 +77,7 @@ public class StopsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stops);
         swipeRefreshLayout = findViewById(R.id.stops_refresh);
+        textViews = new ArrayList<>();
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             nucleoOrigen = 0;
@@ -87,33 +92,28 @@ public class StopsActivity extends AppCompatActivity {
             origen = extras.getString("nombreNucleoOrigen");
             destino = extras.getString("nombreNucleoDestino");
             bs = extras.getDouble("precio");
-            //System.out.println(ciudadDestino);
-            /*System.out.println("Municipio: " + ciudadOrigen + "\n" + "Nucleo: " + nucleoOrigen);
-            System.out.println("Municipio: " + ciudadDestino + "\n" + "Nucleo: " + nucleoDestino);*/
+            /*numBilletes = extras.getInt("billetes");
+            if (numBilletes == 0) {
+                numBilletes = 1;
+            }*/
         }
         tableLayout = findViewById(R.id.tlGridTable);
         btnPay = findViewById(R.id.pay);
-        if(!login){
+        if (!login) {
             btnPay.setVisibility(View.INVISIBLE);
         }
         btnPay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(idLinea == 0){
+                if (idLinea == 0) {
                     Toast.makeText(StopsActivity.this, "Debe seleccionar una línea para pagar el viaje", Toast.LENGTH_SHORT).show();
-                }else {
+                } else {
                     try {
                         dataOut.writeUTF("iviaje");
                         dataOut.flush();
                         dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + ciudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
                         dataOut.flush();
-                        String estado = dataIn.readUTF();
-                        //System.out.println("Estado " + estado);
-                        //Trip trip = new Trip(usuario.getId(), idLinea, ciudadOrigen, bs, timeSalida, timeLlegada, new Date());
-                        startActivity(new Intent(StopsActivity.this, MenuActivity.class)
-                                .putExtra("pagar", bs)
-                                .putExtra("salida", horaSalida)
-                                .putExtra("destino", ciudadDestino));
+                        showDialog(bs, horaSalida, ciudadDestino);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -127,13 +127,14 @@ public class StopsActivity extends AppCompatActivity {
             dataOut.writeUTF(ciudadOrigen + "/" + nucleoOrigen + "/" + ciudadDestino + "/" + nucleoDestino);
             dataOut.flush();
 
-            int lineasSize = dataIn.readInt();
+            lineasSize = dataIn.readInt();
             String datos;
             String[] newDatos;
+            //nombreLinea = "";
             for (int i = 0; i < lineasSize; i++) {
                 String linea = dataIn.readUTF();
                 nombreLinea += linea + "/";
-                //System.out.println("Linea " + linea);
+                //System.out.println(nombreLinea);
                 int paradasSize = dataIn.readInt();
                 //paradas = new Stop[paradasSize];
                 for (int j = 0; j < paradasSize; j++) {
@@ -146,6 +147,7 @@ public class StopsActivity extends AppCompatActivity {
                 //System.out.println("Linea " + linea + " parada " + paradas[0]);
             }
 
+            //tableLayout.removeAllViews();
             listarBloques(nucleoDestino, nucleoOrigen);
             listarHorarios(nucleoDestino, nucleoOrigen);
         } catch (IOException e) {
@@ -156,6 +158,7 @@ public class StopsActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
                 try {
+                    tableLayout.removeAllViews();
                     listarBloques(nucleoDestino, nucleoOrigen);
                     listarHorarios(nucleoDestino, nucleoOrigen);
                     Thread.sleep(1000);
@@ -167,6 +170,11 @@ public class StopsActivity extends AppCompatActivity {
         });
     }
 
+    private void showDialog(double bs, String horaSalida, int idCiudadDestino) {
+        final NumberPickerDialog dialog = new NumberPickerDialog(bs, horaSalida, idCiudadDestino);
+        dialog.show(getSupportFragmentManager(), "NumberPicker");
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void creaCabecera() {
         TableRow cabecera = new TableRow(this);
@@ -175,6 +183,7 @@ public class StopsActivity extends AppCompatActivity {
             TableRow.LayoutParams lp = new TableRow.LayoutParams(100, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = 20;
             cabecera.setLayoutParams(lp);
+            //cabecera.removeAllViews();
             final TextView textView = new TextView(this);
             textView.setText("    " + tableHeader[i] + "    ");
             textView.setTextSize(20f);
@@ -182,28 +191,28 @@ public class StopsActivity extends AppCompatActivity {
             textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             textView.setBackgroundColor(Color.rgb(95, 173, 250));
             //for(int x = 0; x < tableHeader.length; x++){
-                if(tableHeader[tableHeader.length -1].equalsIgnoreCase("observaciones")){
-                    //for(int x = 1; x < tableHeader.length -1; x++){
-                    if(i > 0 && i < tableHeader.length -2) {
-                        final int finalI = i;
-                        textView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                //System.out.println("click");
-                                try {
-                                    dataOut.writeUTF("direccion_parada");
-                                    dataOut.flush();
-                                    dataOut.writeUTF(tableHeader[finalI].trim());
-                                    dataOut.flush();
-                                    System.out.println("parada " + tableHeader[finalI].trim());
-                                    startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+            if (tableHeader[tableHeader.length - 1].equalsIgnoreCase("observaciones")) {
+                //for(int x = 1; x < tableHeader.length -1; x++){
+                if (i > 0 && i < tableHeader.length - 2) {
+                    final int finalI = i;
+                    textView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            //System.out.println("click");
+                            try {
+                                dataOut.writeUTF("direccion_parada");
+                                dataOut.flush();
+                                dataOut.writeUTF(tableHeader[finalI].trim());
+                                dataOut.flush();
+                                System.out.println("parada " + tableHeader[finalI].trim());
+                                startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        });
-                    }
+                        }
+                    });
                 }
+            }
             cabecera.addView(textView);
         }
         tableLayout.addView(cabecera);
@@ -232,14 +241,16 @@ public class StopsActivity extends AppCompatActivity {
             lp.bottomMargin = 20;
             tableRow.setLayoutParams(lp);
             for (int x = 0; x < length; x++) {
-                final TextView textView = new TextView(this);
-                textView.setHeight(100);
+                //final TextView textView = new TextView(this);
+                //textView.setHeight(100);
                 for(int z = 0; z < lineas.length; z++) {
                     if (listaHorarios[i].getNameLinea().equalsIgnoreCase(lineas[z])) {
+                        final TextView textView = new TextView(this);
+                        textView.setHeight(100);
                         System.out.println(lineas[z]);
                         if (x == 0) {
                             textView.setText(listaHorarios[i].getNameLinea());
-                        } else if (/*x == tableHeader.length-1 && */tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
+                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
                             textView.setText(listaHorarios[i].getObservaciones());
                             if (x > 0 && x < (tableHeader.length - 2)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
@@ -265,68 +276,9 @@ public class StopsActivity extends AppCompatActivity {
                         //textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
                         textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         textView.setGravity(CENTER_VERTICAL);
+                        textView.setBackgroundColor(Color.WHITE);
                         if(textView.getText().toString().trim().contains("M")) {
-                            final int finalI = i;
-                            textView.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    //System.out.println(textView.getText().toString());
-                                    String linea = textView.getText().toString();
-                                    textView.setBackgroundColor(Color.rgb(37, 121, 204));
-                                    /*if (textView.getBackground() instanceof ColorDrawable) {
-                                        ColorDrawable cd = (ColorDrawable) textView.getBackground();
-                                        int colorCode = cd.getColor();
-                                    }*/
-                                    /*if(background == 0){
-                                        textView.setBackgroundColor(Color.rgb(37, 121, 204));
-                                        background++;
-                                    }else{
-                                        textView.setBackgroundColor(Color.WHITE);
-                                    }*/
-                                    try {
-                                        dataOut.writeUTF("id_linea");
-                                        dataOut.flush();
-                                        dataOut.writeUTF(linea);
-                                        dataOut.flush();
-                                        idLinea = dataIn.readInt();
-                                        horaSalida = listaHorarios[finalI].getHoras().get(0);
-                                        if(horaSalida.contains("-")){
-                                            for(int i = 0; i < listaHorarios[finalI].getHoras().size(); i++){
-                                                horaSalida = listaHorarios[finalI].getHoras().get(i);
-                                                if(horaSalida.contains("-")){
-                                                    horaSalida = listaHorarios[finalI].getHoras().get(i+1);
-                                                }else{
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-1);
-                                        if(horaLlegada.contains("-")) {
-                                            for (int i = listaHorarios[finalI].getHoras().size() - 2; i >= 0; i--) {
-                                                horaLlegada = listaHorarios[finalI].getHoras().get(i);
-                                                if (horaLlegada.contains("-")) {
-                                                    horaLlegada = listaHorarios[finalI].getHoras().get(i - 1);
-                                                } else {
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        /*horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-1);
-                                        if(horaLlegada.contains("-")){
-                                            horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size()-2);
-                                        }*/
-                                        /*DateFormat sdfLlegada = new SimpleDateFormat("hh:mm");
-                                        DateFormat sdfSalida = new SimpleDateFormat("hh:mm");
-                                        Date dateLlegada = sdfLlegada.parse(horaLlegada);
-                                        Date dateSalida = sdfSalida.parse(horaSalida);
-                                        timeLlegada = new Time(dateLlegada.getTime());
-                                        timeSalida = new Time(dateSalida.getTime());
-                                        System.out.println("Date " + new Date());*/
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
+                            textViews.add(textView);
                         }
                         tableRow.addView(textView);
 
@@ -336,7 +288,7 @@ public class StopsActivity extends AppCompatActivity {
                         FrameLayout linea_cabecera = new FrameLayout(this);
                         TableRow.LayoutParams linea_cabecera_params =
                                 new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, 2);
-                        linea_cabecera_params.span = 10;
+                        linea_cabecera_params.span = 15;
                         linea_cabecera.setBackgroundColor(Color.rgb(37, 121, 204));
                         separador_cabecera.addView(linea_cabecera, linea_cabecera_params);
                         tableLayout.addView(separador_cabecera);
@@ -345,6 +297,96 @@ public class StopsActivity extends AppCompatActivity {
             }
             tableLayout.addView(tableRow);
         }
+        pintaLineas();
+    }
+
+    private void pintaLineas() {
+        for(int i = 0; i < textViews.size(); i++){
+            final int finalI = i;
+            final String[] linea = new String[1];
+            textViews.get(i).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TextView textView = textViews.get(finalI);
+                    linea[0] = textView.getText().toString();
+                    if (textView.getBackground() instanceof ColorDrawable) {
+                        //System.out.println("color");
+                        ColorDrawable cd = (ColorDrawable) textView.getBackground();
+                        int colorCode = cd.getColor();
+                        if(colorCode == Color.WHITE){
+                            for(int j = 0; j < textViews.size(); j++){
+                                textViews.get(j).setBackgroundColor(Color.WHITE);
+                            }
+                            textView.setBackgroundColor(Color.rgb(37, 121, 204));
+                        }
+                    }
+                    try {
+                        dataOut.writeUTF("id_linea");
+                        dataOut.flush();
+                        dataOut.writeUTF(linea[0]);
+                        dataOut.flush();
+                        idLinea = dataIn.readInt();
+                        horaSalida = listaHorarios[finalI].getHoras().get(0);
+                        if (horaSalida.contains("-")) {
+                            for (int j = 0; j < listaHorarios[finalI].getHoras().size(); j++) {
+                                horaSalida = listaHorarios[finalI].getHoras().get(j);
+                                if (horaSalida.contains("-")) {
+                                    horaSalida = listaHorarios[finalI].getHoras().get(j + 1);
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                        horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size() - 1);
+                        if (horaLlegada.contains("-")) {
+                            for (int j = listaHorarios[finalI].getHoras().size() - 2; j >= 0; j--) {
+                                horaLlegada = listaHorarios[finalI].getHoras().get(j);
+                                if (horaLlegada.contains("-")) {
+                                    horaLlegada = listaHorarios[finalI].getHoras().get(j - 1);
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        /*String linea = textView.getText().toString();
+        //textView.setBackgroundColor(Color.rgb(37, 121, 204));
+        try {
+            dataOut.writeUTF("id_linea");
+            dataOut.flush();
+            dataOut.writeUTF(linea);
+            dataOut.flush();
+            idLinea = dataIn.readInt();
+            horaSalida = listaHorarios[finalI].getHoras().get(0);
+            if (horaSalida.contains("-")) {
+                for (int i = 0; i < listaHorarios[finalI].getHoras().size(); i++) {
+                    horaSalida = listaHorarios[finalI].getHoras().get(i);
+                    if (horaSalida.contains("-")) {
+                        horaSalida = listaHorarios[finalI].getHoras().get(i + 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size() - 1);
+            if (horaLlegada.contains("-")) {
+                for (int i = listaHorarios[finalI].getHoras().size() - 2; i >= 0; i--) {
+                    horaLlegada = listaHorarios[finalI].getHoras().get(i);
+                    if (horaLlegada.contains("-")) {
+                        horaLlegada = listaHorarios[finalI].getHoras().get(i - 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
     }
 
     public void listarHorarios(int idNucleoDestino, int idNucleoOrigen) {
@@ -370,15 +412,27 @@ public class StopsActivity extends AppCompatActivity {
                 HorarioList horarioList = response.body();
                 listaHorarios = new Horario[horarioList.getHorarioList().size()];
                 //System.out.println(listaHorarios.length);
-                String cadena = "";
+                //String cadena = "";
                 for (int i = 0; i < horarioList.getHorarioList().size(); i++) {
                     listaHorarios[i] = horarioList.getHorarioList().get(i);
                     //System.out.println(horarioList.getHorarioList().get(i) + "\n");
                 }
-                if(nombreLinea == null || nombreLinea.equalsIgnoreCase("")){
-                    for(int i = 0; i < listaHorarios.length; i++) {
-                        nombreLinea += listaHorarios[i].getNameLinea();
-                        //System.out.println(nombreLinea);
+                if(lineasSize == 0){
+                    List<String> lineas = new ArrayList<>();
+                    for (int i = 0; i < listaHorarios.length; i++) {
+                        lineas.add(listaHorarios[i].getNameLinea());
+                    }
+                    for(int i = 0; i < lineas.size()-1; i++){
+                        for(int j = lineas.size()-1; j >= 0; j--){
+                            if(lineas.get(i).equalsIgnoreCase(lineas.get(j))){
+                                lineas.remove(lineas.get(i));
+                            }
+                        }
+                    }
+                    nombreLinea = "";
+                    for(int i = 0; i < lineas.size()-1; i++){
+                        nombreLinea += lineas.get(i) + "/";
+                        System.out.println(nombreLinea);
                     }
                 }
                 creaTabla();
@@ -427,7 +481,7 @@ public class StopsActivity extends AppCompatActivity {
                 }
                 //System.out.println(paradas.length);
                 for (int i = 0; i < listaSegments.length; i++) {
-                    System.out.println(listaSegments[i]);
+                    //System.out.println(listaSegments[i]);
                     tableHeader[i] = listaSegments[i].getNombre();
                 }
                 creaCabecera();

@@ -49,7 +49,7 @@ public class ScanActivity extends AppCompatActivity {
             if (data != null) {
                 String lectura = data.getStringExtra("com.blikoon.qrcodescanner.got_qr_scan_relult");
                 //Toast.makeText(getApplicationContext(), "Leído: " + lectura, Toast.LENGTH_SHORT).show();
-                textViewQr.append(lectura);
+                textViewQr.setText(lectura);
             }
         }
     }

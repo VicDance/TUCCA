@@ -43,4 +43,14 @@ public class Centre {
     public String getNombreNucleo() {
         return nombreNucleo;
     }
+
+    @Override
+    public String toString() {
+        return "Centre{" +
+                "idNucleo=" + idNucleo +
+                ", idMunicipio=" + idMunicipio +
+                ", idZona='" + idZona + '\'' +
+                ", nombreNucleo='" + nombreNucleo + '\'' +
+                '}';
+    }
 }

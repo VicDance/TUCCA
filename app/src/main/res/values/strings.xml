@@ -73,4 +73,19 @@
     <string name="choose_city">Elija municipio</string>
     <string name="search">Buscar</string>
     <string name="location">Cerca de mi ubicación</string>
+    <string name="price">Coste billete:</string>
+    <string name="tickets">Billetes</string>
+    <string name="tickets_number">¿Cuántos billetes desea comprar?</string>
+    <string name="contact">Contactar con administrador</string>
+    <string name="select_application">Seleccione aplicación</string>
+    <string name="setting_fragment_title">Para consultar cualquier duda o informar sobre cualquier incidencia ocurrida durante el uso de la aplicación,
+    puede contactar con la persona a cargo de administración</string>
+    <string name="subject">Asunto</string>
+    <string name="text">Mensaje</string>
+    <string name="config_connection">Configurar conexión</string>
+    <string name="ip">Dirección del servidor</string>
+    <string name="port">Puerto del servidor</string>
+    <string name="connection_established">Conexión establecida</string>
+    <string name="impossible_to_connect">No se pudo conectar</string>
+    <string name="email_success">Correo enviado con éxito</string>
 </resources>

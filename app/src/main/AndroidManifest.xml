@@ -39,7 +39,6 @@
         <activity
             android:name=".activities.StopsActivity"
             android:theme="@style/AppTheme" />
-        <activity android:name=".activities.PayActivity" />
         <activity
             android:name=".activities.MenuActivity"
             android:theme="@style/AppTheme.NoActionBar" />

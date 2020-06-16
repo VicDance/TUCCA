@@ -1,5 +1,6 @@
 package com.proyecto.transportesbahiacadiz.fragments;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -16,14 +17,18 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.proyecto.transportesbahiacadiz.FareSystemAPI;
+import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.model.Centre;
 import com.proyecto.transportesbahiacadiz.model.Gap;
 import com.proyecto.transportesbahiacadiz.model.GapList;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 
 import retrofit2.Call;
@@ -32,9 +37,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.proyecto.transportesbahiacadiz.Settings.saltos;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
+import static com.proyecto.transportesbahiacadiz.util.Settings.saltos;
 
 public class GapFragment extends Fragment {
     private View view;
@@ -48,10 +51,12 @@ public class GapFragment extends Fragment {
     private LiveDataCentre liveDataCentre;
     private String zonaOrigen;
     private String zonaDestino;
+    private ConnectionClass connectionClass;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_gap, container, false);
+        connectionClass = new ConnectionClass(getContext());
         spinnerDestiny = view.findViewById(R.id.spinner_gap_destiny_centre);
         spinnerOrigin = view.findViewById(R.id.spinner_gap_origin_centre);
         cogeDatosAPI();
@@ -79,8 +84,6 @@ public class GapFragment extends Fragment {
                     //System.out.println(gaps[i]);
                 }
                 cogeDatosBbdd();
-                setSpinnerOrigin();
-                setSpinnerDestiny();
             }
 
             @Override
@@ -91,24 +94,7 @@ public class GapFragment extends Fragment {
     }
 
     private void cogeDatosBbdd(){
-        try {
-            dataOut.writeUTF("nucleos");
-            dataOut.flush();
-            int size = dataIn.readInt();
-            centres = new Centre[size];
-            centresNames = new String[size];
-            String datos;
-            String[] newDatos;
-            for(int i = 0; i < size; i++){
-                datos = dataIn.readUTF();
-                newDatos = datos.split("/");
-                Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
-                centres[i] = centre;
-                centresNames[i] = newDatos[3];
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new getNucleosTask().execute();
     }
 
     private void setSpinnerOrigin(){
@@ -185,6 +171,46 @@ public class GapFragment extends Fragment {
                 textViewSaltos.setText(gaps[i].getSaltos() + "");
                 saltos = gaps[i].getSaltos();
             }
+        }
+    }
+
+    class getNucleosTask extends AsyncTask<Void, Void, Void>{
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("nucleos");
+                dataOut.flush();
+                int size = dataIn.readInt();
+                centres = new Centre[size];
+                centresNames = new String[size];
+                String datos;
+                String[] newDatos;
+                for(int i = 0; i < size; i++){
+                    datos = dataIn.readUTF();
+                    newDatos = datos.split("/");
+                    Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
+                    centres[i] = centre;
+                    centresNames[i] = newDatos[3];
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            setSpinnerOrigin();
+            setSpinnerDestiny();
         }
     }
 }

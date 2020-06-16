@@ -1,6 +1,7 @@
 package com.proyecto.transportesbahiacadiz.fragments;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -15,12 +16,13 @@ import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.MapInterestingPlacesActivity;
 import com.proyecto.transportesbahiacadiz.adapters.PlacesAdapter;
 import com.proyecto.transportesbahiacadiz.model.Places;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
-
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
 public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClickListener {
     private View view;
@@ -30,27 +32,15 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
     private ArrayList<Places> placesArrayList;
     private ArrayList<String> cityNames;
     private ArrayList<Places> extras;
+    private ConnectionClass connectionClass;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_places, container, false);
+        connectionClass = new ConnectionClass(getContext());
         placesArrayList = new ArrayList<Places>();
         cityNames = new ArrayList<>();
-        try {
-            int size = dataIn.readInt();
-            String texto;
-            String[] datos;
-            for (int i = 0; i < size; i++) {
-                texto = dataIn.readUTF();
-                datos = texto.split("/");
-                Places places = new Places(Integer.parseInt(datos[0]), datos[1], datos[2], datos[3]);
-                placesArrayList.add(places);
-            }
-            getIdsMunicipios();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        buildRecycler();
+        new getLugaresInteresTask().execute();
         return view;
     }
 
@@ -173,9 +163,46 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
         }
     }
 
-    private void cambiaActivity(ArrayList<Places> extras){
+    private void cambiaActivity(ArrayList<Places> extras) {
         Intent intent = new Intent(getContext(), MapInterestingPlacesActivity.class);
         intent.putExtra("extra", extras);
         startActivity(intent);
+    }
+
+    class getLugaresInteresTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("lugares_interes");
+                dataOut.flush();
+                int size = dataIn.readInt();
+                String texto;
+                String[] datos;
+                for (int i = 0; i < size; i++) {
+                    texto = dataIn.readUTF();
+                    datos = texto.split("/");
+                    Places places = new Places(Integer.parseInt(datos[0]), datos[1], datos[2], datos[3]);
+                    placesArrayList.add(places);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            getIdsMunicipios();
+            buildRecycler();
+        }
     }
 }

@@ -99,15 +99,12 @@
             android:textSize="20sp"
             android:layout_marginBottom="20dp"/>
 
-        <!--<Button
-            android:id="@+id/btn_pay_trip"
-            android:layout_width="200dp"
+        <TextView
+            android:id="@+id/text_view_price"
+            android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginLeft="80dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/rounded_button"
-            android:text="@string/btn_pay_trip"
-            android:textColor="@android:color/white"
-            android:textSize="20sp" />-->
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:gravity="center"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

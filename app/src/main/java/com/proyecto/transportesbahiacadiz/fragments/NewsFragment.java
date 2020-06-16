@@ -10,14 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.proyecto.transportesbahiacadiz.FareSystemAPI;
+import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.adapters.CardsAdapter;
 import com.proyecto.transportesbahiacadiz.adapters.NewsAdapter;
 import com.proyecto.transportesbahiacadiz.model.News;
 import com.proyecto.transportesbahiacadiz.model.NewsList;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +24,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
 public class NewsFragment extends Fragment {
     private View view;
