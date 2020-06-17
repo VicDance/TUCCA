@@ -1,10 +1,8 @@
 package com.proyecto.transportesbahiacadiz.fragments;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,8 +43,6 @@ import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class MainFragment extends Fragment {
-    private SearchView searchView = null;
-    private SearchView.OnQueryTextListener queryTextListener;
     private TextView title;
     private int size;
     private Zone[] zonas;
@@ -65,6 +62,7 @@ public class MainFragment extends Fragment {
     private String content;
     private ConnectionClass connectionClass;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -78,7 +76,7 @@ public class MainFragment extends Fragment {
         viajesARealizar = new ArrayList<>();
         viajesRealizados = new ArrayList<>();
         connectionClass = new ConnectionClass(getContext());
-        if(login){
+        if (login) {
             title.setText("Historial de viajes");
             recyclerViewNextTrip.setHasFixedSize(true);
             layoutManagerNextTrip = new LinearLayoutManager(getContext());
@@ -86,7 +84,7 @@ public class MainFragment extends Fragment {
             recyclerViewNextTrip.setLayoutManager(layoutManagerNextTrip);
             recyclerViewDone.setLayoutManager(layoutManagerDone);
             getViajes();
-        }else {
+        } else {
             textViewNextTrip.setVisibility(View.GONE);
             textViewDone.setVisibility(View.GONE);
             recyclerViewDone.setVisibility(View.GONE);
@@ -100,57 +98,61 @@ public class MainFragment extends Fragment {
         return view;
     }
 
-    private void getViajes(){
+    private void getViajes() {
         new getViajesTask().execute();
     }
 
-    private void getZonas(){
+    private void getZonas() {
         new getZonasTask().execute();
     }
 
-    private void buildRecyclerZonas(){
+    private void buildRecyclerZonas() {
         zoneAdapter = new ZoneAdapter((ArrayList<Zone>) zones);
         recyclerViewNextTrip.setAdapter(zoneAdapter);
     }
 
-    private void buildRecyclerProximosViajes(){
+    private void buildRecyclerProximosViajes() {
         tripAdapter = new TripAdapter((ArrayList<String>) viajesARealizar);
         recyclerViewNextTrip.setAdapter(tripAdapter);
     }
 
-    private void buildRecyclerViajesRealizados(){
+    private void buildRecyclerViajesRealizados() {
         tripAdapter = new TripAdapter((ArrayList<String>) viajesRealizados);
         recyclerViewDone.setAdapter(tripAdapter);
     }
 
-    private boolean compruebaFecha(String fechaViaje, String hoy){
+    private boolean compruebaFecha(String fechaViaje, String hoy) {
         boolean igual = false;
         String[] fechaViajeSplit = fechaViaje.split("-");
         String[] hoySplit = hoy.split("-");
-        if(Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0]) && Integer.parseInt(fechaViajeSplit[1]) == Integer.parseInt(hoySplit[1])
-                && Integer.parseInt(fechaViajeSplit[2]) == Integer.parseInt(hoySplit[2])){
+        if (Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0]) && Integer.parseInt(fechaViajeSplit[1]) == Integer.parseInt(hoySplit[1])
+                && Integer.parseInt(fechaViajeSplit[2]) == Integer.parseInt(hoySplit[2])) {
             igual = true;
         }
 
         return igual;
     }
 
-    private String compruebaHora(String horaViaje, String nuevaHora){
+    private String compruebaHora(String horaViaje, String nuevaHora) {
         String cad = "";
         String[] fechaViajeSplit = horaViaje.split(":");
         String[] hoySplit = nuevaHora.split(":");
-        if(Integer.parseInt(fechaViajeSplit[0]) > Integer.parseInt(hoySplit[0])){
+        if (Integer.parseInt(fechaViajeSplit[0]) > Integer.parseInt(hoySplit[0])) {
             cad = "mayor";
-        }else if(Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0])){
-            if(Integer.parseInt(fechaViajeSplit[1]) > Integer.parseInt(hoySplit[1])){
+        } else if (Integer.parseInt(fechaViajeSplit[0]) == Integer.parseInt(hoySplit[0])) {
+            if (Integer.parseInt(fechaViajeSplit[1]) > Integer.parseInt(hoySplit[1])) {
                 cad = "mayor";
-            }else{
+            } else {
                 cad = "menor";
             }
-        }else{
+        } else {
             cad = "menor";
         }
         return cad;
+    }
+
+    private void showDialog() {
+        new LocationDialog().show(getFragmentManager(), "Location Dialog");
     }
 
     @Override
@@ -161,74 +163,31 @@ public class MainFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.clear();
-        inflater.inflate(R.menu.search_menu, menu);
         inflater.inflate(R.menu.location_menu, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
 
-        if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
-        if (searchView != null) {
-            searchView.setQueryHint("Introduzca nombre o código de parada");
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-
-            queryTextListener = new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    Log.i("onQueryTextChange", newText);
-
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    Log.i("onQueryTextSubmit", query);
-
-                    return true;
-                }
-            };
-            searchView.setOnQueryTextListener(queryTextListener);
-        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        searchView.setOnQueryTextListener(queryTextListener);
         switch (item.getItemId()) {
-            case R.id.action_search:
-                // Not implemented here
-                return false;
             case R.id.action_location:
-                item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        showDialog();
-                        return true;
-                    }
-                });
+                showDialog();
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
-        //searchView.setOnQueryTextListener(queryTextListener);
-        //return super.onOptionsItemSelected(item);
     }
 
-    private void showDialog() {
-        new LocationDialog().show(getFragmentManager(), "Location Dialog");
-    }
-
-    class getViajesTask extends AsyncTask<Void, Void, Void>{
+    class getViajesTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
         DataInputStream dataIn;
         DataOutputStream dataOut;
 
         @Override
         protected Void doInBackground(Void... voids) {
-            try{
+            try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
                 dataIn = new DataInputStream(cliente.getInputStream());
                 dataOut = new DataOutputStream(cliente.getOutputStream());
@@ -239,7 +198,7 @@ public class MainFragment extends Fragment {
                 dataOut.flush();
                 int size = dataIn.readInt();
                 trips = new Trip[size];
-                for(int i = 0; i < size; i++){
+                for (int i = 0; i < size; i++) {
                     String texto = dataIn.readUTF();
                     String[] datos = texto.split("/");
                     java.util.Date date = new java.util.Date();
@@ -258,17 +217,17 @@ public class MainFragment extends Fragment {
                     //viajes.add(content);
                     String fechaActual = sdf.format(date);
                     String fechaViaje = sdf.format(trips[i].getFechaViaje());
-                    if(compruebaFecha(fechaViaje, fechaActual)){
+                    if (compruebaFecha(fechaViaje, fechaActual)) {
                         String horaActual = sdfHora.format(date);
                         String respuesta = compruebaHora(trips[i].getHoraSalida(), horaActual);
-                        if(respuesta.equals("mayor")){
+                        if (respuesta.equals("mayor")) {
                             //viajes a realizar
                             viajesARealizar.add(content);
-                        }else {
+                        } else {
                             //ya realizados
                             viajesRealizados.add(content);
                         }
-                    }else{
+                    } else {
                         //poner en viajes ya realizados
                         viajesRealizados.add(content);
                         //System.out.println(viajesRealizados.get(0));

@@ -13,6 +13,11 @@ public class Stop {
         this.nombre = nombre;
     }
 
+    public Stop(String latitud, String longitud){
+        this.latitud = latitud;
+        this.longitud = longitud;
+    }
+
     public Stop(int idParada, String idZona, String nombre, String latitud, String longitud) {
         this.idParada = idParada;
         this.idZona = idZona;

@@ -6,5 +6,5 @@
     <item android:id="@+id/action_location"
         android:title="ubicación"
         android:icon="@drawable/ic_place"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
 </menu>

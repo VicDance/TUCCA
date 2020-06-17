@@ -60,8 +60,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.proyecto.transportesbahiacadiz.util.Settings.saltos_billete;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
 public class TripFragment extends Fragment {
     private SearchView searchView = null;
@@ -382,7 +380,6 @@ public class TripFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.clear();
         inflater.inflate(R.menu.search_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);

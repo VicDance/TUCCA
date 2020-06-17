@@ -18,7 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.MapInterestingPlacesActivity"></activity>
+        <activity android:name=".activities.StopsUserPositionActivity"></activity>
+        <activity android:name=".activities.MapInterestingPlacesActivity" />
         <activity android:name=".activities.ScanActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.

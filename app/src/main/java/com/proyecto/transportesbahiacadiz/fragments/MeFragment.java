@@ -280,18 +280,12 @@ public class MeFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_add_card:
-                item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        Intent intent = new Intent(getContext(), CreditCardActivity.class);
-                        startActivity(intent);
-                        return true;
-                    }
-                });
+                Intent intent = new Intent(getContext(), CreditCardActivity.class);
+                startActivity(intent);
+                return true;
             default:
-                break;
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     class setUserTask extends AsyncTask<Void, Void, Void>{

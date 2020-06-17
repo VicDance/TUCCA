@@ -159,19 +159,12 @@ public class CardsFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_add_card:
-                item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        Intent intent = new Intent(getContext(), AddCardActivity.class);
-                        startActivity(intent);
-                        return true;
-                    }
-                });
-                return false;
+                Intent intent = new Intent(getContext(), AddCardActivity.class);
+                startActivity(intent);
+                return true;
             default:
-                break;
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     private void showDialog() {
