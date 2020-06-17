@@ -115,18 +115,6 @@ public class TripFragment extends Fragment {
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*if(login) {
-                    showDialog(idCiudadOrigen, idCiudadDestino, idNucleoOrigen, idNucleoDestino, nucleoOrigen, nucleoDestino, bs);
-                }else{
-                    startActivity(new Intent(getContext(), StopsActivity.class)
-                            .putExtra("ciudadOrigen", idCiudadOrigen)
-                            .putExtra("ciudadDestino", idCiudadDestino)
-                            .putExtra("nucleoOrigen", idNucleoOrigen)
-                            .putExtra("nucleoDestino", idNucleoDestino)
-                            .putExtra("nombreNucleoOrigen", nucleoOrigen)
-                            .putExtra("nombreNucleoDestino", nucleoDestino)
-                            .putExtra("precio", bs));
-                }*/
                 startActivity(new Intent(getContext(), StopsActivity.class)
                         .putExtra("ciudadOrigen", idCiudadOrigen)
                         .putExtra("ciudadDestino", idCiudadDestino)
@@ -139,13 +127,6 @@ public class TripFragment extends Fragment {
         });
         return view;
     }
-
-    /*private void showDialog(int idCiudadOrigen, int idCiudadDestino, int idNucleoOrigen, int idNucleoDestino, String nucleoOrigen, String nucleoDestino
-    , double bs){
-        final NumberPickerDialog dialog = new NumberPickerDialog(idCiudadOrigen, idCiudadDestino, idNucleoOrigen, idNucleoDestino, nucleoOrigen,
-                nucleoDestino, bs);
-        dialog.show(getFragmentManager(), "NumberPicker");
-    }*/
 
     private void listarMunicipios() {
         new getMunicipiosTask().execute();

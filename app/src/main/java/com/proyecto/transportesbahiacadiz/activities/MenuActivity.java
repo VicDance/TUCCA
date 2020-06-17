@@ -119,35 +119,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
     private void getUser(){
         getUserTask getUserTask = new getUserTask();
         getUserTask.execute();
-        /*String datos = null;
-        String newDatos[];
-        try {
-            dataOut.writeUTF("cliente");
-            dataOut.flush();
-            dataOut.writeUTF(getDatos(this));
-            dataOut.flush();
-            datos = dataIn.readUTF();
-            newDatos = datos.split("¬");
-            usuario = new Usuario();
-            //System.out.println(datos);
-            if(newDatos.length == 7) {
-                usuario.setId(Integer.parseInt(newDatos[0]));
-                usuario.setNombre(newDatos[1]);
-                usuario.setCorreo(newDatos[3]);
-                usuario.setFecha_nac(newDatos[4]);
-                usuario.setTfno(Integer.parseInt(newDatos[5]));
-                //usuario.setImagen(newDatos[6]);
-                //usuario.setImagen(newDatos[5]);
-            }else{
-                usuario.setId(Integer.parseInt(newDatos[0]));
-                usuario.setNombre(newDatos[1]);
-                usuario.setCorreo(newDatos[3]);
-                usuario.setFecha_nac(newDatos[4]);
-                usuario.setTfno(Integer.parseInt(newDatos[5]));
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }*/
     }
 
     private Bitmap convertStringToBitmap(String url){
@@ -189,7 +160,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_places:
                 new TaskCambiarFragment().execute(new PlacesFragment());
                 break;
-
             case R.id.nav_settings:
                 new TaskCambiarFragment().execute(new SettingsFragment());
                 break;

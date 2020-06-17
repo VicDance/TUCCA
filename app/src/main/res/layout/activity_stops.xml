@@ -5,12 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.StopsActivity"
-    android:orientation="vertical">
+    android:background="@android:color/white">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/stops_refresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="500dp">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:text="@string/pay"
         android:textSize="20sp"
-        android:layout_alignBottom="@id/stops_refresh"
+        android:layout_below="@id/stops_refresh"
         android:layout_centerHorizontal="true"
         android:background="@drawable/rounded_button"
         android:textColor="@android:color/white"/>

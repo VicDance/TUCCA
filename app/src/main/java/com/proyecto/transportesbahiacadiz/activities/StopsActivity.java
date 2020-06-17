@@ -7,6 +7,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -27,8 +28,13 @@ import com.proyecto.transportesbahiacadiz.model.HorarioList;
 import com.proyecto.transportesbahiacadiz.model.Segment;
 import com.proyecto.transportesbahiacadiz.model.SegmentList;
 import com.proyecto.transportesbahiacadiz.model.Stop;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,10 +45,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.view.Gravity.CENTER_VERTICAL;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
-import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class StopsActivity extends AppCompatActivity {
     private int nucleoOrigen;
@@ -65,6 +68,7 @@ public class StopsActivity extends AppCompatActivity {
     private String horaLlegada;
     private List<TextView> textViews;
     private int lineasSize;
+    private ConnectionClass connectionClass;
 
     private Button btnPay;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -76,6 +80,7 @@ public class StopsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stops);
+        connectionClass = new ConnectionClass(this);
         swipeRefreshLayout = findViewById(R.id.stops_refresh);
         textViews = new ArrayList<>();
         Bundle extras = getIntent().getExtras();
@@ -99,6 +104,7 @@ public class StopsActivity extends AppCompatActivity {
         }
         tableLayout = findViewById(R.id.tlGridTable);
         btnPay = findViewById(R.id.pay);
+        System.out.println("Login " + login);
         if (!login) {
             btnPay.setVisibility(View.INVISIBLE);
         }
@@ -108,51 +114,15 @@ public class StopsActivity extends AppCompatActivity {
                 if (idLinea == 0) {
                     Toast.makeText(StopsActivity.this, "Debe seleccionar una línea para pagar el viaje", Toast.LENGTH_SHORT).show();
                 } else {
-                    try {
-                        dataOut.writeUTF("iviaje");
-                        dataOut.flush();
-                        dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + ciudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
-                        dataOut.flush();
-                        showDialog(bs, horaSalida, ciudadDestino);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    showDialog(bs, horaSalida, ciudadDestino, idLinea, horaLlegada);
                 }
             }
         });
 
-        try {
-            dataOut.writeUTF("paradas_viaje");
-            dataOut.flush();
-            dataOut.writeUTF(ciudadOrigen + "/" + nucleoOrigen + "/" + ciudadDestino + "/" + nucleoDestino);
-            dataOut.flush();
+        new getParadasViajeTask().execute();
 
-            lineasSize = dataIn.readInt();
-            String datos;
-            String[] newDatos;
-            //nombreLinea = "";
-            for (int i = 0; i < lineasSize; i++) {
-                String linea = dataIn.readUTF();
-                nombreLinea += linea + "/";
-                //System.out.println(nombreLinea);
-                int paradasSize = dataIn.readInt();
-                //paradas = new Stop[paradasSize];
-                for (int j = 0; j < paradasSize; j++) {
-                    datos = dataIn.readUTF();
-                    newDatos = datos.split("/");
-                    //System.out.println(datos);
-                    Stop stop = new Stop(Integer.parseInt(newDatos[0]), newDatos[1], newDatos[2], newDatos[3], newDatos[4]);
-                    stopList.add(stop);
-                }
-                //System.out.println("Linea " + linea + " parada " + paradas[0]);
-            }
-
-            //tableLayout.removeAllViews();
-            listarBloques(nucleoDestino, nucleoOrigen);
-            listarHorarios(nucleoDestino, nucleoOrigen);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        listarBloques(nucleoDestino, nucleoOrigen);
+        listarHorarios(nucleoDestino, nucleoOrigen);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -170,8 +140,8 @@ public class StopsActivity extends AppCompatActivity {
         });
     }
 
-    private void showDialog(double bs, String horaSalida, int idCiudadDestino) {
-        final NumberPickerDialog dialog = new NumberPickerDialog(bs, horaSalida, idCiudadDestino);
+    private void showDialog(double bs, String horaSalida, int idCiudadDestino, int idLinea, String horaLlegada) {
+        final NumberPickerDialog dialog = new NumberPickerDialog(bs, horaSalida, idCiudadDestino, idLinea, horaLlegada);
         dialog.show(getSupportFragmentManager(), "NumberPicker");
     }
 
@@ -183,7 +153,6 @@ public class StopsActivity extends AppCompatActivity {
             TableRow.LayoutParams lp = new TableRow.LayoutParams(100, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = 20;
             cabecera.setLayoutParams(lp);
-            //cabecera.removeAllViews();
             final TextView textView = new TextView(this);
             textView.setText("    " + tableHeader[i] + "    ");
             textView.setTextSize(20f);
@@ -199,16 +168,18 @@ public class StopsActivity extends AppCompatActivity {
                         @Override
                         public void onClick(View v) {
                             //System.out.println("click");
-                            try {
-                                dataOut.writeUTF("direccion_parada");
-                                dataOut.flush();
-                                dataOut.writeUTF(tableHeader[finalI].trim());
-                                dataOut.flush();
-                                System.out.println("parada " + tableHeader[finalI].trim());
-                                startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            new getDireccionParadaTask(finalI).execute();
+                        }
+                    });
+                }
+            }else if(tableHeader[tableHeader.length - 1].equalsIgnoreCase("frecuencia")){
+                if (i > 0 && i < tableHeader.length - 1) {
+                    final int finalI = i;
+                    textView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            //System.out.println("click");
+                            new getDireccionParadaTask(finalI).execute();
                         }
                     });
                 }
@@ -241,16 +212,14 @@ public class StopsActivity extends AppCompatActivity {
             lp.bottomMargin = 20;
             tableRow.setLayoutParams(lp);
             for (int x = 0; x < length; x++) {
-                //final TextView textView = new TextView(this);
-                //textView.setHeight(100);
-                for(int z = 0; z < lineas.length; z++) {
+                for (int z = 0; z < lineas.length; z++) {
                     if (listaHorarios[i].getNameLinea().equalsIgnoreCase(lineas[z])) {
                         final TextView textView = new TextView(this);
                         textView.setHeight(100);
                         System.out.println(lineas[z]);
                         if (x == 0) {
                             textView.setText(listaHorarios[i].getNameLinea());
-                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("observaciones")) {
+                        } else if (tableHeader[tableHeader.length - 1].equalsIgnoreCase("observaciones")) {
                             textView.setText(listaHorarios[i].getObservaciones());
                             if (x > 0 && x < (tableHeader.length - 2)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
@@ -259,12 +228,11 @@ public class StopsActivity extends AppCompatActivity {
                                     cont = 0;
                                 }
                             }
-                            if( x == tableHeader.length-2){
+                            if (x == tableHeader.length - 2) {
                                 textView.setText(listaHorarios[i].getDias());
                             }
-                        } else if (tableHeader[tableHeader.length-1].equalsIgnoreCase("frecuencia")) {
+                        } else if (tableHeader[tableHeader.length - 1].equalsIgnoreCase("frecuencia")) {
                             textView.setText(listaHorarios[i].getDias());
-                            //System.out.println("entra frecuencia");
                             if (x > 0 && x < (tableHeader.length - 1)) {
                                 textView.setText(listaHorarios[i].getHoras().get(cont));
                                 cont++;
@@ -273,11 +241,10 @@ public class StopsActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        //textView.setTextAppearance(R.style.Widget_MaterialComponents_TabLayout);
                         textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         textView.setGravity(CENTER_VERTICAL);
                         textView.setBackgroundColor(Color.WHITE);
-                        if(textView.getText().toString().trim().contains("M")) {
+                        if (textView.getText().toString().trim().contains("M")) {
                             textViews.add(textView);
                         }
                         tableRow.addView(textView);
@@ -301,7 +268,7 @@ public class StopsActivity extends AppCompatActivity {
     }
 
     private void pintaLineas() {
-        for(int i = 0; i < textViews.size(); i++){
+        for (int i = 0; i < textViews.size(); i++) {
             final int finalI = i;
             final String[] linea = new String[1];
             textViews.get(i).setOnClickListener(new View.OnClickListener() {
@@ -313,80 +280,45 @@ public class StopsActivity extends AppCompatActivity {
                         //System.out.println("color");
                         ColorDrawable cd = (ColorDrawable) textView.getBackground();
                         int colorCode = cd.getColor();
-                        if(colorCode == Color.WHITE){
-                            for(int j = 0; j < textViews.size(); j++){
+                        if (colorCode == Color.WHITE) {
+                            for (int j = 0; j < textViews.size(); j++) {
                                 textViews.get(j).setBackgroundColor(Color.WHITE);
                             }
                             textView.setBackgroundColor(Color.rgb(37, 121, 204));
+                        } else if (colorCode == Color.rgb(37, 121, 204)) {
+                            textView.setBackgroundColor(Color.WHITE);
+                            idLinea = 0;
                         }
                     }
-                    try {
-                        dataOut.writeUTF("id_linea");
-                        dataOut.flush();
-                        dataOut.writeUTF(linea[0]);
-                        dataOut.flush();
-                        idLinea = dataIn.readInt();
-                        horaSalida = listaHorarios[finalI].getHoras().get(0);
-                        if (horaSalida.contains("-")) {
-                            for (int j = 0; j < listaHorarios[finalI].getHoras().size(); j++) {
-                                horaSalida = listaHorarios[finalI].getHoras().get(j);
-                                if (horaSalida.contains("-")) {
-                                    horaSalida = listaHorarios[finalI].getHoras().get(j + 1);
-                                } else {
-                                    break;
-                                }
+                    if(idLinea != 0) {
+                        new getIdLineaTask(linea).execute();
+                    }
+
+                    horaSalida = listaHorarios[finalI].getHoras().get(0);
+                    if (horaSalida.contains("-")) {
+                        for (int j = 0; j < listaHorarios[finalI].getHoras().size(); j++) {
+                            horaSalida = listaHorarios[finalI].getHoras().get(j);
+                            if (horaSalida.contains("-")) {
+                                horaSalida = listaHorarios[finalI].getHoras().get(j + 1);
+                            } else {
+                                break;
                             }
                         }
-                        horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size() - 1);
-                        if (horaLlegada.contains("-")) {
-                            for (int j = listaHorarios[finalI].getHoras().size() - 2; j >= 0; j--) {
-                                horaLlegada = listaHorarios[finalI].getHoras().get(j);
-                                if (horaLlegada.contains("-")) {
-                                    horaLlegada = listaHorarios[finalI].getHoras().get(j - 1);
-                                } else {
-                                    break;
-                                }
+                    }
+                    horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size() - 1);
+                    if (horaLlegada.contains("-")) {
+                        for (int j = listaHorarios[finalI].getHoras().size() - 2; j >= 0; j--) {
+                            horaLlegada = listaHorarios[finalI].getHoras().get(j);
+                            if (horaLlegada.contains("-")) {
+                                horaLlegada = listaHorarios[finalI].getHoras().get(j - 1);
+                            } else {
+                                break;
                             }
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
             });
         }
-        /*String linea = textView.getText().toString();
-        //textView.setBackgroundColor(Color.rgb(37, 121, 204));
-        try {
-            dataOut.writeUTF("id_linea");
-            dataOut.flush();
-            dataOut.writeUTF(linea);
-            dataOut.flush();
-            idLinea = dataIn.readInt();
-            horaSalida = listaHorarios[finalI].getHoras().get(0);
-            if (horaSalida.contains("-")) {
-                for (int i = 0; i < listaHorarios[finalI].getHoras().size(); i++) {
-                    horaSalida = listaHorarios[finalI].getHoras().get(i);
-                    if (horaSalida.contains("-")) {
-                        horaSalida = listaHorarios[finalI].getHoras().get(i + 1);
-                    } else {
-                        break;
-                    }
-                }
-            }
-            horaLlegada = listaHorarios[finalI].getHoras().get(listaHorarios[finalI].getHoras().size() - 1);
-            if (horaLlegada.contains("-")) {
-                for (int i = listaHorarios[finalI].getHoras().size() - 2; i >= 0; i--) {
-                    horaLlegada = listaHorarios[finalI].getHoras().get(i);
-                    if (horaLlegada.contains("-")) {
-                        horaLlegada = listaHorarios[finalI].getHoras().get(i - 1);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     public void listarHorarios(int idNucleoDestino, int idNucleoOrigen) {
@@ -411,26 +343,35 @@ public class StopsActivity extends AppCompatActivity {
                 }
                 HorarioList horarioList = response.body();
                 listaHorarios = new Horario[horarioList.getHorarioList().size()];
-                //System.out.println(listaHorarios.length);
-                //String cadena = "";
                 for (int i = 0; i < horarioList.getHorarioList().size(); i++) {
                     listaHorarios[i] = horarioList.getHorarioList().get(i);
-                    //System.out.println(horarioList.getHorarioList().get(i) + "\n");
                 }
-                if(lineasSize == 0){
+                if (lineasSize == 0) {
                     List<String> lineas = new ArrayList<>();
                     for (int i = 0; i < listaHorarios.length; i++) {
                         lineas.add(listaHorarios[i].getNameLinea());
                     }
-                    for(int i = 0; i < lineas.size()-1; i++){
-                        for(int j = lineas.size()-1; j >= 0; j--){
-                            if(lineas.get(i).equalsIgnoreCase(lineas.get(j))){
-                                lineas.remove(lineas.get(i));
+                    if(lineas.size() == 2 && lineas.get(0) == lineas.get(1)){
+                        lineas.remove(1);
+                    }else if(lineas.size() == 3 && (lineas.get(0) == lineas.get(1) || lineas.get(0) == lineas.get(2) || lineas.get(1) == lineas.get(2))){
+                        lineas.remove(2);
+                        lineas.remove(1);
+                    }else {
+                        System.out.println(lineas.size());
+                        for (int i = 0; i < lineas.size() ; i++) {
+                            for (int j = lineas.size() - 1; j >= 0; j--) {
+                                System.out.println("i: " + i + " j: " + j);
+                                if(lineas.size() == i || lineas.size() == j){
+                                    break;
+                                }
+                                if (lineas.get(i).equalsIgnoreCase(lineas.get(j))) {
+                                    lineas.remove(lineas.get(j));
+                                }
                             }
                         }
                     }
                     nombreLinea = "";
-                    for(int i = 0; i < lineas.size()-1; i++){
+                    for (int i = 0; i < lineas.size() ; i++) {
                         nombreLinea += lineas.get(i) + "/";
                         System.out.println(nombreLinea);
                     }
@@ -492,5 +433,109 @@ public class StopsActivity extends AppCompatActivity {
                 System.out.println("Error: " + t.getMessage());
             }
         });
+    }
+
+    class getParadasViajeTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("paradas_viaje");
+                dataOut.flush();
+                dataOut.writeUTF(ciudadOrigen + "/" + nucleoOrigen + "/" + ciudadDestino + "/" + nucleoDestino);
+                dataOut.flush();
+
+                lineasSize = dataIn.readInt();
+                String datos;
+                String[] newDatos;
+                for (int i = 0; i < lineasSize; i++) {
+                    String linea = dataIn.readUTF();
+                    nombreLinea += linea + "/";
+                    int paradasSize = dataIn.readInt();
+                    for (int j = 0; j < paradasSize; j++) {
+                        datos = dataIn.readUTF();
+                        newDatos = datos.split("/");
+                        Stop stop = new Stop(Integer.parseInt(newDatos[0]), newDatos[1], newDatos[2], newDatos[3], newDatos[4]);
+                        stopList.add(stop);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    class getIdLineaTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+        private String[] linea;
+
+        public getIdLineaTask(String[] linea) {
+            this.linea = linea;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("id_linea");
+                dataOut.flush();
+                dataOut.writeUTF(linea[0]);
+                dataOut.flush();
+                idLinea = dataIn.readInt();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    class getDireccionParadaTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        DataInputStream dataIn;
+        DataOutputStream dataOut;
+        private int posicion;
+
+        public getDireccionParadaTask(int posicion){
+            this.posicion = posicion;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                dataIn = new DataInputStream(cliente.getInputStream());
+                dataOut = new DataOutputStream(cliente.getOutputStream());
+
+                dataOut.writeUTF("direccion_parada");
+                dataOut.flush();
+                dataOut.writeUTF(tableHeader[posicion].trim());
+                dataOut.flush();
+                String direccion = dataIn.readUTF();
+
+                Intent intent = new Intent(StopsActivity.this, MapStopsActivity.class);
+                intent.putExtra("direccion", direccion);
+                startActivity(intent);
+                //System.out.println("parada " + tableHeader[posicion].trim());
+                //startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 }
