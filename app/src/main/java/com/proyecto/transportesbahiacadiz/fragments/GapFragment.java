@@ -28,6 +28,8 @@ import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 
@@ -36,6 +38,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import serializable.Nucleo;
 
 import static com.proyecto.transportesbahiacadiz.util.Settings.saltos;
 
@@ -44,7 +47,7 @@ public class GapFragment extends Fragment {
     private Gap[] gaps;
     private Spinner spinnerOrigin;
     private Spinner spinnerDestiny;
-    private Centre[] centres;
+    private Nucleo[] centres;
     private String[] centresNames;
     private ArrayAdapter<String> adapterDestinyCentre;
     private ArrayAdapter<String> adapterOriginCentre;
@@ -176,31 +179,30 @@ public class GapFragment extends Fragment {
 
     class getNucleosTask extends AsyncTask<Void, Void, Void>{
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("nucleos");
-                dataOut.flush();
-                int size = dataIn.readInt();
-                centres = new Centre[size];
+                outputStream.writeUTF("nucleos");
+                outputStream.flush();
+                outputStream.reset();
+
+                int size = inputStream.readInt();
+
+                centres = new Nucleo[size];
                 centresNames = new String[size];
-                String datos;
-                String[] newDatos;
                 for(int i = 0; i < size; i++){
-                    datos = dataIn.readUTF();
-                    newDatos = datos.split("/");
-                    Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
-                    centres[i] = centre;
-                    centresNames[i] = newDatos[3];
+                    Nucleo nucleo = (Nucleo) inputStream.readObject();
+                    centres[i] = nucleo;
+                    centresNames[i] = nucleo.getNombreNucleo();
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;

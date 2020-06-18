@@ -17,6 +17,8 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Random;
 
@@ -111,8 +113,8 @@ public class AddCardActivity extends AppCompatActivity {
 
     class addCardTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         private String tarjeta;
 
@@ -124,18 +126,22 @@ public class AddCardActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
                 try {
-                    dataOut.writeUTF(tarjeta);
-                    dataOut.flush();
+                    outputStream.writeUTF(tarjeta);
+                    outputStream.flush();
+                    outputStream.reset();
+
                     final Random rnd = new Random();
                     long numTarjeta = rnd.nextLong();
                     //System.out.println(dig13);
-                    dataOut.writeUTF(numTarjeta + "/" + usuario.getId());
-                    dataOut.flush();
-                    estado = dataIn.readUTF();
+                    outputStream.writeUTF(numTarjeta + "/" + usuario.getId());
+                    outputStream.flush();
+                    outputStream.reset();
+
+                    estado = inputStream.readUTF();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

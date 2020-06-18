@@ -32,10 +32,13 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
+import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class CardsFragment extends Fragment {
     private View view;
@@ -182,21 +185,25 @@ public class CardsFragment extends Fragment {
 
     class getNombreMunicipioTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("nombre_municipio");
-                dataOut.flush();
-                dataOut.writeInt(destino);
-                dataOut.flush();
-                nombreMunicipio = dataIn.readUTF();
+                outputStream.writeUTF("nombre_municipio");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeInt(destino);
+                outputStream.flush();
+                outputStream.reset();
+
+                nombreMunicipio = inputStream.readUTF();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -206,23 +213,29 @@ public class CardsFragment extends Fragment {
 
     class getTarjetasBusTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
                 cardItemList.clear();
-                dataOut.writeUTF("tarjetasb");
-                dataOut.flush();
-                size = dataIn.readInt();
+                outputStream.writeUTF("tarjetasb");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeInt(usuario.getId());
+                outputStream.flush();
+                outputStream.reset();
+
+                size = inputStream.readInt();
                 for (int i = 0; i < size; i++) {
                     String datos;
-                    datos = dataIn.readUTF();
+                    datos = inputStream.readUTF();
                     newDatos = datos.split("/");
                     cardItemList.add(new CardItem(newDatos[0], newDatos[newDatos.length - 1]));
                 }
@@ -241,8 +254,8 @@ public class CardsFragment extends Fragment {
 
     class borrarTarjetaTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         private int position;
 
@@ -254,14 +267,16 @@ public class CardsFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("btarjetaBus");
-                dataOut.flush();
-                dataOut.writeInt(position);
-                dataOut.flush();
-                //estado = dataIn.readUTF();
+                outputStream.writeUTF("btarjetaBus");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeInt(position);
+                outputStream.flush();
+                outputStream.reset();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -271,8 +286,8 @@ public class CardsFragment extends Fragment {
 
     class getTarjetaTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         private int position;
 
@@ -284,17 +299,18 @@ public class CardsFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("tarjeta");
-                dataOut.flush();
+                outputStream.writeUTF("tarjeta");
+                outputStream.flush();
+                outputStream.reset();
                 //textView = view.findViewById(R.id.text_view_number_card);
-                dataOut.writeUTF(cardItemList.get(position).getTextNumber());
-                dataOut.flush();
+                outputStream.writeUTF(cardItemList.get(position).getTextNumber());
+                outputStream.flush();
 
-                numtarjeta = dataIn.readUTF();
-                saldoYDescuento = dataIn.readUTF();
+                numtarjeta = inputStream.readUTF();
+                saldoYDescuento = inputStream.readUTF();
             } catch (IOException e) {
                 e.printStackTrace();
             }

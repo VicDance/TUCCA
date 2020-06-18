@@ -66,8 +66,8 @@ public class MapInterestingPlacesActivity extends AppCompatActivity implements O
             if(!latitud.isEmpty() && !longitud.isEmpty()){
                 punto = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
                 map.addMarker(new MarkerOptions().position(punto));
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 12f));
             }
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 12f));
         }
     }
 

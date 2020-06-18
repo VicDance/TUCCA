@@ -5,6 +5,7 @@
     android:paddingLeft="30dp"
     android:paddingTop="30dp"
     android:paddingRight="30dp">
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -13,14 +14,14 @@
             android:id="@+id/image_user"
             android:layout_width="150dp"
             android:layout_height="150dp"
-            android:src="@drawable/ic_person_loggin"
-            android:layout_centerHorizontal="true"/>
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_person_loggin" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_marginTop="150dp">
+            android:layout_marginTop="150dp"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/text_view_user_user"
@@ -82,61 +83,24 @@
                 android:text=""
                 android:textSize="20sp" />
 
-            <!--<RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">-->
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/change_image"
-                android:textSize="20sp"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/change_image_camera"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_camera"
-                    android:layout_marginRight="30dp"/>
-                <ImageView
-                    android:id="@+id/change_image_gallery"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_image"/>
-            </LinearLayout>
-
             <Button
-                android:id="@+id/btn_change_password"
+                android:id="@+id/btn_change_profile"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/rounded_button"
-                android:text="@string/change_password"
-                android:textColor="@android:color/white"
                 android:layout_marginBottom="20dp"
-                android:layout_marginTop="20sp"/>
-
-            <!--<Button
-                android:id="@+id/btn_change_image"
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
                 android:background="@drawable/rounded_button"
-                android:text="@string/change_image"
-                android:textColor="@android:color/white"
-                android:layout_marginBottom="30dp"
-                android:layout_marginTop="20sp"/>-->
+                android:text="@string/change_profile"
+                android:textColor="@android:color/white" />
 
             <Button
                 android:id="@+id/btn_exit"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:layout_marginBottom="30dp"
                 android:background="@drawable/rounded_border"
                 android:text="@string/exit"
-                android:textColor="@android:color/holo_blue_light"
-                android:layout_marginBottom="30dp"
-                android:layout_marginTop="20sp"/>
+                android:textColor="@android:color/holo_blue_light" />
         </LinearLayout>
 
         <TextView
@@ -146,6 +110,6 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="200dp"
             android:textAlignment="center"
-            android:textSize="30sp"/>
+            android:textSize="30sp" />
     </RelativeLayout>
 </androidx.core.widget.NestedScrollView>

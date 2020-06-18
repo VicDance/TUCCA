@@ -47,6 +47,8 @@ import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCity;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
@@ -58,23 +60,21 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import serializable.Municipio;
+import serializable.Nucleo;
 
 import static com.proyecto.transportesbahiacadiz.util.Settings.saltos_billete;
 
 public class TripFragment extends Fragment {
-    private SearchView searchView = null;
-    private SearchView.OnQueryTextListener queryTextListener;
-    private RecyclerView.LayoutManager layoutManager;
     private View view;
     private Spinner spinnerOriginCity;
     private Spinner spinnerDestinyCity;
     private Spinner spinnerOriginCentre;
     private Spinner spinnerDestinyCentre;
-    private City[] listaMunicipios;
+    private Municipio[] listaMunicipios;
     private String[] listaNombreMunicipios;
-    private Centre[] listaNucleos;
+    private Nucleo[] listaNucleos;
     private String[] listaNombreNucleos;
-    private String[] listaHorarios;
     private ArrayAdapter<String> adapterOriginCities;
     private ArrayAdapter<String> adapterOriginCentre;
     private ArrayAdapter<String> adapterDestinyCities;
@@ -84,7 +84,6 @@ public class TripFragment extends Fragment {
     private TextView textViewLines;
     private TextView textViewPrice;
     private int size;
-    private String[] newDatos;
     private LiveDataCity liveDataCity;
     private LiveDataCentre liveDataCentre;
     int idCiudadOrigen;
@@ -139,14 +138,10 @@ public class TripFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 liveDataCity = new ViewModelProvider((ViewModelStoreOwner) getContext()).get(LiveDataCity.class);
-                //liveDataCity.getCityList();
-                //int idMunicipio = 0;
                 String ciudad = (String) parent.getSelectedItem();
                 for (int i = 0; i < listaMunicipios.length; i++) {
                     if (ciudad.equalsIgnoreCase(listaMunicipios[i].getNombreMunicipio())) {
                         idCiudadOrigen = listaMunicipios[i].getIdMunicipio();
-                        //liveDataCity.addCity(new City(idMunicipio, ciudad));
-                        //city.setIdMunicipio(idMunicipio);
                         break;
                     }
                 }
@@ -180,12 +175,10 @@ public class TripFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 liveDataCity = new ViewModelProvider((ViewModelStoreOwner) getContext()).get(LiveDataCity.class);
-                //int idMunicipio = 0;
                 String ciudad = (String) parent.getSelectedItem();
                 for (int i = 0; i < listaMunicipios.length; i++) {
                     if (ciudad.equalsIgnoreCase(listaMunicipios[i].getNombreMunicipio())) {
                         idCiudadDestino = listaMunicipios[i].getIdMunicipio();
-                        //liveDataCity.addCity(new City(idMunicipio, ciudad));
                         break;
                     }
                 }
@@ -219,7 +212,6 @@ public class TripFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 liveDataCentre = new ViewModelProvider((ViewModelStoreOwner) getContext()).get(LiveDataCentre.class);
-                //int idNucleo = 0;
                 nucleoOrigen = (String) parent.getSelectedItem();
                 for (int i = 0; i < listaNucleos.length; i++) {
                     if (nucleoOrigen.equalsIgnoreCase(listaNucleos[i].getNombreNucleo())) {
@@ -275,7 +267,6 @@ public class TripFragment extends Fragment {
                     }
                 });
 
-                //Settings settings = new Settings();
                 if (saltos_billete.isEmpty()) {
                     cogeDatosAPI();
                     cogeSaltosAPI();
@@ -340,7 +331,6 @@ public class TripFragment extends Fragment {
                 gaps = new Gap[gapList.getGapList().size()];
                 for (int i = 0; i < gapList.getGapList().size(); i++) {
                     gaps[i] = gapList.getGapList().get(i);
-                    //System.out.println(gaps[i]);
                 }
                 obtieneSaltos();
                 cogePrecioBillete(saltos);
@@ -372,72 +362,21 @@ public class TripFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.search_menu, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-
-        if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
-        if (searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-
-            queryTextListener = new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    Log.i("onQueryTextChange", newText);
-
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    Log.i("onQueryTextSubmit", query);
-
-                    return true;
-                }
-            };
-            searchView.setOnQueryTextListener(queryTextListener);
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_search:
-                // Not implemented here
-                return false;
-            default:
-                break;
-        }
-        searchView.setOnQueryTextListener(queryTextListener);
-        return super.onOptionsItemSelected(item);
-    }
-
     class getMunicipiosTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("municipios");
-                dataOut.flush();
-                size = dataIn.readInt();
+                outputStream.writeUTF("municipios");
+                outputStream.flush();
+                size = inputStream.readInt();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -452,18 +391,17 @@ public class TripFragment extends Fragment {
                 StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                         .permitAll().build();
                 StrictMode.setThreadPolicy(policy);
-                listaMunicipios = new City[size];
+                listaMunicipios = new Municipio[size];
                 listaNombreMunicipios = new String[size];
                 for (int i = 0; i < size; i++) {
-                    String datos;
                     try {
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("/");
-                        City city = new City(Integer.parseInt(newDatos[0]), newDatos[1]);
-                        listaMunicipios[i] = city;
-                        listaNombreMunicipios[i] = city.getNombreMunicipio();
-                    } catch (IOException ex) {
-                        Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                        Municipio municipio = (Municipio) inputStream.readObject();
+                        listaMunicipios[i] = municipio;
+                        listaNombreMunicipios[i] = municipio.getNombreMunicipio();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
 
@@ -475,8 +413,8 @@ public class TripFragment extends Fragment {
 
     class getNucleosTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
         private int idMun;
         private int nucleo;
 
@@ -489,12 +427,13 @@ public class TripFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("nucleos");
-                dataOut.flush();
-                size = dataIn.readInt();
+                outputStream.writeUTF("nucleos");
+                outputStream.flush();
+
+                size = inputStream.readInt();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -509,15 +448,12 @@ public class TripFragment extends Fragment {
                 StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                         .permitAll().build();
                 StrictMode.setThreadPolicy(policy);
-                listaNucleos = new Centre[size];
+                listaNucleos = new Nucleo[size];
                 for (int i = 0; i < size; i++) {
                     try {
-                        String datos = dataIn.readUTF();
-                        newDatos = datos.split("/");
-                        Centre centre = new Centre(Integer.parseInt(newDatos[0]), Integer.parseInt(newDatos[1]), newDatos[2], newDatos[3]);
-                        listaNucleos[i] = centre;
-                        //System.out.println(listaNucleos[i]);
-                    } catch (IOException ex) {
+                        Nucleo nucleo = (Nucleo) inputStream.readObject();
+                        listaNucleos[i] = nucleo;
+                    } catch (IOException | ClassNotFoundException ex) {
                         Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }

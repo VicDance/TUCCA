@@ -1,5 +1,6 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -13,7 +14,7 @@ import android.widget.Toast;
 import com.blikoon.qrcodescanner.QrCodeActivity;
 import com.proyecto.transportesbahiacadiz.R;
 
-public class ScanActivity extends AppCompatActivity {
+public class ScanActivity extends AppCompatActivity{
     private static final int REQUEST_CODE_QR_SCAN = 101;
 
     private Button buttonScan;
@@ -35,8 +36,9 @@ public class ScanActivity extends AppCompatActivity {
         });
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != Activity.RESULT_OK) {
             Toast.makeText(getApplicationContext(), "No se pudo obtener una respuesta", Toast.LENGTH_SHORT).show();
             String resultado = data.getStringExtra("com.blikoon.qrcodescanner.error_decoding_image");

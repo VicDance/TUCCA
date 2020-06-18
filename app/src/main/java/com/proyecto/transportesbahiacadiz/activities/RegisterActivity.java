@@ -1,6 +1,7 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
 import android.app.DatePickerDialog;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,15 +17,17 @@ import androidx.fragment.app.DialogFragment;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.fragments.DatePickerFragment;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
+import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.sql.Date;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 
 public class RegisterActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
     private Button button;
@@ -36,6 +39,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private ImageButton datePicker;
     private TextView textView;
     private Long date;
+    private ConnectionClass connectionClass;
 
     public static Usuario usuario;
 
@@ -43,6 +47,9 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+
+        connectionClass = new ConnectionClass(this);
+
         datePicker = findViewById(R.id.button_date_picker);
         datePicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,30 +64,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
             public void onClick(View v) {
                 if (compruebaCampos() && compruebaTfno(String.valueOf(editTextPhone.getText())) &&
                         compruebaEmail(String.valueOf(editTextEmail.getText()))) {
-                    try {
-                        dataOut.writeUTF("encriptar");
-                        dataOut.flush();
-                        dataOut.writeUTF("cliente" + "/" + editTextUser.getText() + "/" + editTextPassword.getText() + "/"
-                        + editTextEmail.getText() + "/" + editTextPhone.getText() + "/" + date);
-                        dataOut.flush();
-                        String estado = dataIn.readUTF();
-                        if(estado.equalsIgnoreCase("correcto")){
-                            usuario = new Usuario(editTextUser.getText().toString(), editTextEmail.getText().toString(), Integer.parseInt(editTextPhone.getText().toString()), textView.getText().toString(), "");
-                            System.out.println(usuario);
-                            new AlertDialog.Builder(RegisterActivity.this)
-                                    .setTitle(getString(R.string.correct))
-                                    .setMessage("Se ha registrado satisfactoriamente")
-                                    .show();
-                        }else{
-                            new AlertDialog.Builder(RegisterActivity.this)
-                                    .setTitle(getString(R.string.incorrect))
-                                    .setMessage("No se ha podido registrar")
-                                    .show();
-                        }
-                        //finish();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    new registrarTask().execute();
                 }else{
                     new AlertDialog.Builder(RegisterActivity.this)
                             .setTitle("Campos vacios")
@@ -162,5 +146,46 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         textView = findViewById(R.id.text_view_register_date);
         textView.setText(currentDateString);
         date = c.getTime().getTime();
+    }
+
+    class registrarTask extends AsyncTask<Void, Void, Void> {
+        Socket cliente;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
+
+                outputStream.writeUTF("encriptar");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF("cliente");
+                outputStream.flush();
+                outputStream.reset();
+
+                serializable.Usuario user = new serializable.Usuario(editTextUser.getText().toString(), editTextPassword.getText().toString(), editTextEmail.getText().toString(),
+                        new Date(date), Integer.parseInt(editTextPhone.getText().toString()));
+                outputStream.writeObject(user);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            usuario = new Usuario(editTextUser.getText().toString(), editTextEmail.getText().toString(), Integer.parseInt(editTextPhone.getText().toString()), textView.getText().toString());
+            System.out.println(usuario);
+            new AlertDialog.Builder(RegisterActivity.this)
+                    .setTitle(getString(R.string.correct))
+                    .setMessage("Se ha registrado satisfactoriamente")
+                    .show();
+        }
     }
 }

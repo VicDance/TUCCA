@@ -42,12 +42,13 @@ import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
+import serializable.Nucleo;
 
 public class SalePointFragment extends Fragment implements OnMapReadyCallback {
     private View view;
@@ -55,7 +56,7 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private Spinner spinner;
     private ArrayAdapter<String> adapterCentre;
-    private Centre[] nucleos;
+    private Nucleo[] nucleos;
     private String[] nombreNucleos;
     private int idNucleo;
     private List<String> latitudes;
@@ -178,30 +179,27 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
 
     class getPuntosVentaTask extends AsyncTask<Void, Void, Void>{
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("puntos_venta");
-                dataOut.flush();
-                int size = dataIn.readInt();
-                nucleos = new Centre[size];
+                outputStream.writeUTF("puntos_venta");
+                outputStream.flush();
+                int size = inputStream.readInt();
+                nucleos = new Nucleo[size];
                 nombreNucleos = new String[size];
-                String datos;
-                String[] newDatos;
                 for (int i = 0; i < size; i++) {
-                    datos = dataIn.readUTF();
-                    newDatos = datos.split("/");
-                    nucleos[i] = new Centre(Integer.parseInt(newDatos[1]), newDatos[0]);
-                    nombreNucleos[i] = newDatos[0];
+                    Nucleo nucleo = (Nucleo) inputStream.readObject();
+                    nucleos[i] = nucleo;
+                    nombreNucleos[i] = nucleo.getNombreNucleo();
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;
@@ -216,24 +214,24 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
 
     class getMapaTask extends AsyncTask<Void, Void, Void>{
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("puntos_venta_mapa");
-                dataOut.writeInt(idNucleo);
-                dataOut.flush();
+                outputStream.writeUTF("puntos_venta_mapa");
+                outputStream.writeInt(idNucleo);
+                outputStream.flush();
                 System.out.println(idNucleo);
-                int puntosSize = dataIn.readInt();
+                int puntosSize = inputStream.readInt();
                 String direcciones;
                 for (int x = 0; x < puntosSize; x++) {
-                    direcciones = dataIn.readUTF();
+                    direcciones = inputStream.readUTF();
                     String[] newDireccion = direcciones.split("/");
                     latitudes.add(newDireccion[0]);
                     longitudes.add(newDireccion[1]);

@@ -32,7 +32,8 @@
                 android:layout_width="300dp"
                 android:layout_height="40dp"
                 android:layout_marginLeft="20dp"
-                android:maxLines="1"/>
+                android:maxLines="1"
+                android:inputType="textCapSentences"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="35sp"

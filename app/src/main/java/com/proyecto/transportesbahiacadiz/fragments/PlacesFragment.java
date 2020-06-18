@@ -21,15 +21,19 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import serializable.LugarInteres;
 
 public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClickListener {
     private View view;
     private RecyclerView recyclerView;
     private PlacesAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
-    private ArrayList<Places> placesArrayList;
+    private ArrayList<LugarInteres> placesArrayList;
     private ArrayList<String> cityNames;
     private ArrayList<Places> extras;
     private ConnectionClass connectionClass;
@@ -38,7 +42,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_places, container, false);
         connectionClass = new ConnectionClass(getContext());
-        placesArrayList = new ArrayList<Places>();
+        placesArrayList = new ArrayList<LugarInteres>();
         cityNames = new ArrayList<>();
         new getLugaresInteresTask().execute();
         return view;
@@ -62,7 +66,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 1) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -71,7 +75,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 2) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -80,7 +84,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 3) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -89,7 +93,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 4) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -98,7 +102,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 5) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -107,7 +111,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 6) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -116,7 +120,7 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 7) {
                         //System.out.println(placesArrayList.get(j));
-                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombre());
+                        places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
                 }
@@ -171,28 +175,26 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
 
     class getLugaresInteresTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("lugares_interes");
-                dataOut.flush();
-                int size = dataIn.readInt();
+                outputStream.writeUTF("lugares_interes");
+                outputStream.flush();
+                int size = inputStream.readInt();
                 String texto;
                 String[] datos;
                 for (int i = 0; i < size; i++) {
-                    texto = dataIn.readUTF();
-                    datos = texto.split("/");
-                    Places places = new Places(Integer.parseInt(datos[0]), datos[1], datos[2], datos[3]);
-                    placesArrayList.add(places);
+                    LugarInteres lugarInteres = (LugarInteres) inputStream.readObject();
+                    placesArrayList.add(lugarInteres);
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;

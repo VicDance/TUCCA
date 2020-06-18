@@ -43,7 +43,7 @@
     <string name="everyday_card">Tarjeta estándar</string>
     <string name="retired_card">Tarjeta jubilados</string>
     <string name="student_card">Tarjeta estudiante</string>
-    <string name="change_password">Cambiar contraseña</string>
+    <string name="change_profile">Modificar perfil</string>
     <string name="exit">Cerrar sesión</string>
     <string name="born_date">Fecha nacimiento</string>
     <string name="new_credit_card">Nueva tarjeta</string>
@@ -88,4 +88,8 @@
     <string name="connection_established">Conexión establecida</string>
     <string name="impossible_to_connect">No se pudo conectar</string>
     <string name="email_success">Correo enviado con éxito</string>
+    <string name="empty">Campos vacíos</string>
+    <string name="empty_message">Debe rellenar todos los campos para continuar</string>
+    <string name="username_long">Nombre demasiado largo</string>
+    <string name="username_long_message">La longitud del texto es mayor que la permitida</string>
 </resources>

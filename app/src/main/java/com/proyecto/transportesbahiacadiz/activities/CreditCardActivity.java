@@ -23,19 +23,24 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+
+import serializable.TarjetaCredito;
+
+import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class CreditCardActivity extends AppCompatActivity implements CreditCardsAdapter.OnItemClickListener, CreditCardsAdapter.OnLongItemCliclListener {
     private RecyclerView recyclerView;
     private CreditCardsAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private TextView textView;
-    private ArrayList<CreditCard> creditCardItems = null;
+    private ArrayList<TarjetaCredito> creditCardItems = null;
     private Button btnNewCredit;
     private int size;
-    private String[] newDatos;
     private String newString;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ConnectionClass connectionClass;
@@ -45,7 +50,7 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_credit_card);
         connectionClass = new ConnectionClass(this);
-        creditCardItems = new ArrayList<CreditCard>();
+        creditCardItems = new ArrayList<TarjetaCredito>();
         new getTarjetasCreditoTask().execute();
         creditCardItems.clear();
         recyclerView = findViewById(R.id.recycler_view_credit_cards);
@@ -130,29 +135,32 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
 
     class getTarjetasCreditoTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
                 creditCardItems.clear();
-                dataOut.writeUTF("tarjetas");
-                dataOut.flush();
-                size = dataIn.readInt();
-                CreditCard creditCard = null;
+                outputStream.writeUTF("tarjetas");
+                outputStream.flush();
+                outputStream.reset();
+
+                System.out.println(usuario.getId());
+                outputStream.writeInt(usuario.getId());
+                outputStream.flush();
+                outputStream.reset();
+
+                size = inputStream.readInt();
                 for (int i = 0; i < size; i++) {
-                    String datos;
-                    datos = dataIn.readUTF();
-                    newDatos = datos.split("-");
-                    creditCard = new CreditCard(newDatos[3], newDatos[0], newDatos[2]);
-                    creditCardItems.add(creditCard);
+                    TarjetaCredito tarjetaCredito = (TarjetaCredito) inputStream.readObject();
+                    creditCardItems.add(tarjetaCredito);
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;
@@ -167,8 +175,8 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
 
     class borrarTarjetaTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         private int position;
 
@@ -180,13 +188,16 @@ public class CreditCardActivity extends AppCompatActivity implements CreditCards
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("btarjetaCredito");
-                dataOut.flush();
-                dataOut.writeInt(position);
-                dataOut.flush();
+                outputStream.writeUTF("btarjetaCredito");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeInt(position);
+                outputStream.flush();
+                outputStream.reset();
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {

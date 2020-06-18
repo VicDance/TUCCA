@@ -1,17 +1,15 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +19,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.db.DataBaseRoom;
@@ -31,33 +31,30 @@ import com.tapadoo.alerter.Alerter;
 import com.tapadoo.alerter.OnHideAlertListener;
 import com.tapadoo.alerter.OnShowAlertListener;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static android.os.Build.VERSION.SDK_INT;
 
 public class MainActivity extends AppCompatActivity /*implements NavigationView.OnNavigationItemSelectedListener*/ {
-    public static Socket cliente;
-    public static DataOutputStream dataOut;
-    public static DataInputStream dataIn;
     private Button buttonRegister;
     private Button buttonLogin;
     private EditText editTextUser;
     private EditText editTextPassword;
+
     public static final String STRING_PREFERENCES = "fragments";
     public static final String STRING_NAME_PREFERENCES = "user";
     public static final String PREFERENCE_STATUS = "estado.button.sesion";
+
     private RadioButton radioButton;
     public static boolean login;
     private TextView textViewInvitado;
     public static String nombreCliente;
     int idCliente;
-    private boolean activado;
+    static boolean activado;
     private ImageButton settingsButton;
     private String respuesta;
 
@@ -183,7 +180,6 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
         textViewInvitado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //invitado = true;
                 Intent intent = new Intent(MainActivity.this, MenuActivity.class);
                 startActivity(intent);
                 finish();
@@ -191,9 +187,9 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
         });
     }
 
-    public void guardaEstado() {
-        SharedPreferences preferences = getSharedPreferences(STRING_PREFERENCES, MODE_PRIVATE);
-        preferences.edit().putBoolean(PREFERENCE_STATUS, radioButton.isChecked()).apply();
+    public static void guardaEstado(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(STRING_PREFERENCES, MODE_PRIVATE);
+        preferences.edit().putBoolean(PREFERENCE_STATUS, activado).apply();
     }
 
     public boolean getEstado() {
@@ -233,8 +229,8 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
 
     public class loginTask extends AsyncTask<String, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(String... strings) {
@@ -247,17 +243,25 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                     cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
                     System.out.println("direccion: " + connectionClass.getConnection().get(0).getAddress());
                     System.out.println("puerto: " + connectionClass.getConnection().get(0).getPort());
-                    dataOut = new DataOutputStream(cliente.getOutputStream());
-                    dataIn = new DataInputStream(cliente.getInputStream());
+                    /*dataOut = new DataOutputStream(cliente.getOutputStream());
+                    dataIn = new DataInputStream(cliente.getInputStream());*/
+                    outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                    inputStream = new ObjectInputStream(cliente.getInputStream());
                     if (editTextUser.getText().length() != 0 && editTextPassword.getText().length() != 0) {
                         //try {
-                        dataOut.writeUTF("inicio");
-                        dataOut.flush();
-                        dataOut.writeUTF(editTextUser.getText().toString().trim());
-                        dataOut.flush();
-                        dataOut.writeUTF(editTextPassword.getText().toString());
-                        dataOut.flush();
-                        respuesta = dataIn.readUTF();
+                        outputStream.writeUTF("inicio");
+                        outputStream.flush();
+                        outputStream.reset();
+
+                        outputStream.writeUTF(editTextUser.getText().toString().trim());
+                        outputStream.flush();
+                        outputStream.reset();
+
+                        outputStream.writeUTF(editTextPassword.getText().toString());
+                        outputStream.flush();
+                        outputStream.reset();
+
+                        respuesta = inputStream.readUTF();
                         System.out.println(respuesta);
                     } else {
                         new AlertDialog.Builder(MainActivity.this)
@@ -284,12 +288,13 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
 
                 if (respuesta.trim().contains("cliente")) {
                     try {
-                        idCliente = dataIn.readInt();
+                        idCliente = inputStream.readInt();
+                        //System.out.println("id: " + idCliente);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     login = true;
-                    guardaEstado();
+                    guardaEstado(MainActivity.this);
                     guardarDatos();
                     Intent intent = new Intent(MainActivity.this, MenuActivity.class);
                     intent.putExtra("nombre", editTextUser.getText().toString().trim());
@@ -339,31 +344,5 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
             id = dataBaseRoom.connectionDAO().updateConnection(connection);
             return id;
         }
-    }
-
-    private void conectar() {
-        //final int PUERTO = 6000;
-        //mi casa
-        //final String HOST = "192.168.1.13";
-        //casa angel
-        //final String HOST = "192.168.0.102";
-        //cadiz
-        //final String HOST = "192.168.0.132";
-        //final String HOST = "192.168.1.35";
-        //"localhost";
-        /*int SDK_INT = android.os.Build.VERSION.SDK_INT;
-        if (SDK_INT > 8) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-            try {
-                //cliente = new Socket(HOST, PUERTO);
-                //dataOut = new DataOutputStream(cliente.getOutputStream());
-                dataIn = new DataInputStream(cliente.getInputStream());
-            } catch (IOException ex) {
-                Logger.getLogger(MainActivity.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        }*/
     }
 }

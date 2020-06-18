@@ -23,6 +23,8 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
@@ -90,20 +92,23 @@ public class NumberPickerDialog extends DialogFragment {
 
     class insertarViajeTasK extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("iviaje");
-                dataOut.flush();
-                dataOut.writeUTF(usuario.getId() + "/" + idLinea + "/" + idCiudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
-                dataOut.flush();
+                outputStream.writeUTF("iviaje");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(usuario.getId() + "/" + idLinea + "/" + idCiudadDestino + "/" + bs + "/" + horaSalida + "/" + horaLlegada);
+                outputStream.flush();
+                outputStream.reset();
             } catch (IOException e) {
                 e.printStackTrace();
             }

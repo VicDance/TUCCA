@@ -14,10 +14,12 @@ import com.proyecto.transportesbahiacadiz.model.Zone;
 
 import java.util.ArrayList;
 
-public class ZoneAdapter extends RecyclerView.Adapter<ZoneAdapter.ZoneViewHolder>{
-    private ArrayList<Zone> itemList;
+import serializable.Zona;
 
-    public ZoneAdapter(ArrayList<Zone> itemList){
+public class ZoneAdapter extends RecyclerView.Adapter<ZoneAdapter.ZoneViewHolder>{
+    private ArrayList<Zona> itemList;
+
+    public ZoneAdapter(ArrayList<Zona> itemList){
         this.itemList = itemList;
     }
 

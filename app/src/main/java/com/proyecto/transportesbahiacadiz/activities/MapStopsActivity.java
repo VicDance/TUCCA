@@ -21,8 +21,6 @@ import com.proyecto.transportesbahiacadiz.model.TimeStopsItem;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-
 public class MapStopsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private String latitud;
     private String longitud;

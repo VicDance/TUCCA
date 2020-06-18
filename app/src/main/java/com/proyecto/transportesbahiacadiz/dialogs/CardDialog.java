@@ -37,6 +37,8 @@ import net.glxn.qrgen.android.QRCode;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -259,21 +261,25 @@ public class CardDialog extends DialogFragment {
 
     class getCodigoQRTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("codigo");
-                dataOut.flush();
-                dataOut.writeUTF(numtarjeta);
-                dataOut.flush();
-                contenidoQR = dataIn.readUTF();
+                outputStream.writeUTF("codigo");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(numtarjeta);
+                outputStream.flush();
+                outputStream.reset();
+
+                contenidoQR = inputStream.readUTF();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -283,27 +289,30 @@ public class CardDialog extends DialogFragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).bitmap();
+            Bitmap bitmap = QRCode.from(contenidoQR).withSize(700, 700).withCharset("UTF-8").bitmap();
             imageViewQr.setImageBitmap(bitmap);
         }
     }
 
     class actualizaSaldoTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("actualiza_saldo");
-                dataOut.flush();
-                dataOut.writeUTF(saldo + "/" + numtarjeta);
-                dataOut.flush();
+                outputStream.writeUTF("actualiza_saldo");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(saldo + "/" + numtarjeta);
+                outputStream.flush();
+                outputStream.reset();
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -320,20 +329,23 @@ public class CardDialog extends DialogFragment {
 
     class actualizaCodigoTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("actualiza_codigo");
-                dataOut.flush();
-                dataOut.writeUTF(horaCodigo + "/" + numtarjeta + "/" + contenidoQR);
-                dataOut.flush();
+                outputStream.writeUTF("actualiza_codigo");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(horaCodigo + "/" + numtarjeta + "/" + contenidoQR);
+                outputStream.flush();
+                outputStream.reset();
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {

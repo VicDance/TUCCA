@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera"/>
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -18,7 +19,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.StopsUserPositionActivity"></activity>
+        <activity android:name=".activities.ChangeProfileActivity"></activity>
+        <activity android:name=".activities.StopsUserPositionActivity" />
         <activity android:name=".activities.MapInterestingPlacesActivity" />
         <activity android:name=".activities.ScanActivity" />
         <!--

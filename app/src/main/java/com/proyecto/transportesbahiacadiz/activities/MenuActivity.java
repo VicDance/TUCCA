@@ -34,14 +34,15 @@ import com.proyecto.transportesbahiacadiz.model.Usuario;
 import com.proyecto.transportesbahiacadiz.util.Connection;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataIn;
-import static com.proyecto.transportesbahiacadiz.activities.MainActivity.dataOut;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.getDatos;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
@@ -121,10 +122,21 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
         getUserTask.execute();
     }
 
-    private Bitmap convertStringToBitmap(String url){
-        byte[] encodeByte = Base64.decode(usuario.getImagen(), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-        return bitmap;
+    public void cambiaImagen(Usuario usuario) {
+        try {
+            if (usuario.getImagen().toString().equals("null") || usuario.getImagen().toString().length() == 0 || usuario.getImagen() == null ||
+                    usuario.getImagen().toString().equalsIgnoreCase("imagen")) {
+                userImage.setImageResource(R.drawable.ic_person_loggin);
+            } else {
+                byte[] blob = usuario.getImagen();
+                ByteArrayInputStream bais = new ByteArrayInputStream(blob);
+                Bitmap photo = BitmapFactory.decodeStream(bais);
+                userImage.setImageBitmap(photo);
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override
@@ -188,45 +200,42 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
 
     class getUserTask extends AsyncTask<Void, Void, Void>{
         Socket cliente = null;
-        DataOutputStream dataOut = null;
-        DataInputStream dataIn = null;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                String datos;
-                String[] newDatos;
-                dataOut.writeUTF("cliente");
-                dataOut.flush();
-                dataOut.writeUTF(getDatos(MenuActivity.this));
-                dataOut.flush();
-                datos = dataIn.readUTF();
-                newDatos = datos.split("¬");
+                outputStream.writeUTF("cliente");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(getDatos(MenuActivity.this));
+                outputStream.flush();
+                outputStream.reset();
+                serializable.Usuario us= (serializable.Usuario) inputStream.readObject();
+                //System.out.println(us);
                 usuario = new Usuario();
-                //System.out.println(datos);
-                if(newDatos.length == 7) {
-                    usuario.setId(Integer.parseInt(newDatos[0]));
-                    usuario.setNombre(newDatos[1]);
-                    usuario.setCorreo(newDatos[3]);
-                    usuario.setFecha_nac(newDatos[4]);
-                    usuario.setTfno(Integer.parseInt(newDatos[5]));
-                    //usuario.setImagen(newDatos[6]);
-                    //usuario.setImagen(newDatos[5]);
-                }else{
-                    usuario.setId(Integer.parseInt(newDatos[0]));
-                    usuario.setNombre(newDatos[1]);
-                    usuario.setCorreo(newDatos[3]);
-                    usuario.setFecha_nac(newDatos[4]);
-                    usuario.setTfno(Integer.parseInt(newDatos[5]));
-                }
-            } catch (IOException e) {
+                usuario.setId(us.getId());
+                usuario.setNombre(us.getNombre());
+                usuario.setCorreo(us.getCorreo());
+                usuario.setFecha_nac(us.getFecha_nac().toString());
+                usuario.setTfno(us.getTfno());
+                usuario.setImagen(us.getImagen());
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            cambiaImagen(usuario);
         }
     }
 }

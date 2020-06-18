@@ -1,52 +1,36 @@
-package com.proyecto.transportesbahiacadiz.model;
-
+package serializable;
 
 import java.io.Serializable;
 import java.sql.Blob;
+import java.sql.Date;
 
-public class Usuario{
+public class Usuario implements Serializable {
+    private static final long serialVersionUID = 6529685098267757690L;
+
     private int id;
     private String nombre;
     private String correo;
     private int tfno;
-    private String fecha_nac;
+    private Date fecha_nac;
     private byte[] imagen;
     private String contraseña;
 
-    public Usuario(){
+    public Usuario(){}
 
-    }
-
-    public Usuario(String nombre, String correo, int tfno, String fecha_nac){
-        this.nombre = nombre;
-        this.correo = correo;
-        this.tfno = tfno;
-        this.fecha_nac = fecha_nac;
-    }
-
-    public Usuario(int id, String nombre, String correo, int tfno, String fecha_nac){
+    public Usuario(int id, String nombre, String contraseña, String correo, byte[] imagen){
         this.id = id;
         this.nombre = nombre;
+        this.contraseña = contraseña;
         this.correo = correo;
-        this.tfno = tfno;
-        this.fecha_nac = fecha_nac;
-    }
-
-    public Usuario(int id, String nombre, String correo, int tfno, String fecha_nac, byte[] imagen){
-        this.id = id;
-        this.nombre = nombre;
-        this.correo = correo;
-        this.tfno = tfno;
-        this.fecha_nac = fecha_nac;
         this.imagen = imagen;
     }
 
-    public Usuario(String nombre, String correo, int tfno, String fecha_nac, byte[] imagen){
+    public Usuario(String nombre, String contraseña, String correo, Date fecha_nac, int tfno){
         this.nombre = nombre;
+        this.contraseña = contraseña;
         this.correo = correo;
-        this.tfno = tfno;
         this.fecha_nac = fecha_nac;
-        this.imagen = imagen;
+        this.tfno = tfno;
     }
 
     public int getId() {
@@ -81,11 +65,11 @@ public class Usuario{
         this.tfno = tfno;
     }
 
-    public String getFecha_nac() {
+    public Date getFecha_nac() {
         return fecha_nac;
     }
 
-    public void setFecha_nac(String fecha_nac) {
+    public void setFecha_nac(Date fecha_nac) {
         this.fecha_nac = fecha_nac;
     }
 
@@ -107,13 +91,14 @@ public class Usuario{
 
     @Override
     public String toString() {
-        return "User{" +
+        return "Usuario{" +
                 "id=" + id +
                 ", nombre='" + nombre + '\'' +
                 ", correo='" + correo + '\'' +
                 ", tfno=" + tfno +
                 ", fecha_nac='" + fecha_nac + '\'' +
-                ", imagen=" + imagen +
+                ", imagen='" + imagen + '\'' +
+                ", contraseña='" + contraseña + '\'' +
                 '}';
     }
 }

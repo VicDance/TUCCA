@@ -31,6 +31,8 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -39,13 +41,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import serializable.Zona;
+
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class MainFragment extends Fragment {
     private TextView title;
     private int size;
-    private Zone[] zonas;
+    private Zona[] zonas;
     private Trip[] trips;
     private String[] newDatos;
     private RecyclerView recyclerViewNextTrip;
@@ -56,7 +60,7 @@ public class MainFragment extends Fragment {
     private TripAdapter tripAdapter;
     private RecyclerView.LayoutManager layoutManagerNextTrip;
     private RecyclerView.LayoutManager layoutManagerDone;
-    private List<Zone> zones;
+    private List<Zona> zones;
     private List<String> viajesARealizar;
     private List<String> viajesRealizados;
     private String content;
@@ -107,7 +111,7 @@ public class MainFragment extends Fragment {
     }
 
     private void buildRecyclerZonas() {
-        zoneAdapter = new ZoneAdapter((ArrayList<Zone>) zones);
+        zoneAdapter = new ZoneAdapter((ArrayList<Zona>) zones);
         recyclerViewNextTrip.setAdapter(zoneAdapter);
     }
 
@@ -182,24 +186,27 @@ public class MainFragment extends Fragment {
 
     class getViajesTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("viajes");
-                dataOut.flush();
-                dataOut.writeInt(usuario.getId());
-                dataOut.flush();
-                int size = dataIn.readInt();
+                outputStream.writeUTF("viajes");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeInt(usuario.getId());
+                outputStream.flush();
+                outputStream.reset();
+                int size = inputStream.readInt();
                 trips = new Trip[size];
                 for (int i = 0; i < size; i++) {
-                    String texto = dataIn.readUTF();
+                    String texto = inputStream.readUTF();
                     String[] datos = texto.split("/");
                     java.util.Date date = new java.util.Date();
                     date.setTime(Long.parseLong(datos[3]));
@@ -247,32 +254,34 @@ public class MainFragment extends Fragment {
         }
     }
 
-    class getZonasTask extends AsyncTask<ArrayList<Zone>, Void, List<Zone>> {
+    class getZonasTask extends AsyncTask<ArrayList<Zona>, Void, List<Zona>> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
-        protected List<Zone> doInBackground(ArrayList<Zone>... arrayLists) {
+        protected List<Zona> doInBackground(ArrayList<Zona>... arrayLists) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("zonas");
-                dataOut.flush();
-                size = dataIn.readInt();
-                zonas = new Zone[size];
+                outputStream.writeUTF("zonas");
+                outputStream.flush();
+                outputStream.reset();
+
+                size = inputStream.readInt();
+                zonas = new Zona[size];
                 for (int i = 0; i < size; i++) {
-                    String datos;
+                    //String datos;
                     try {
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("-");
-                        Zone zona = new Zone(newDatos[0], newDatos[1], newDatos[2]);
+                        Zona zona = (Zona) inputStream.readObject();
                         //System.out.println(zona);
                         zones.add(zona);
                     } catch (IOException ex) {
                         Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
                 }
             } catch (IOException e) {
@@ -282,7 +291,7 @@ public class MainFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(List<Zone> zones) {
+        protected void onPostExecute(List<serializable.Zona> zones) {
             super.onPostExecute(zones);
             buildRecyclerZonas();
         }

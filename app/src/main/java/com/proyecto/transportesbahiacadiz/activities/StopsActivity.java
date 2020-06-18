@@ -33,6 +33,8 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import serializable.Parada;
 
 import static android.view.Gravity.CENTER_VERTICAL;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
@@ -58,7 +61,7 @@ public class StopsActivity extends AppCompatActivity {
     private Horario[] listaHorarios;
     private Segment[] listaSegments;
     private String[] tableHeader;
-    private List<Stop> stopList = new ArrayList<Stop>();
+    private List<Parada> stopList = new ArrayList<Parada>();
     private TableLayout tableLayout;
     private Stop[] paradas;
     private int length;
@@ -97,10 +100,6 @@ public class StopsActivity extends AppCompatActivity {
             origen = extras.getString("nombreNucleoOrigen");
             destino = extras.getString("nombreNucleoDestino");
             bs = extras.getDouble("precio");
-            /*numBilletes = extras.getInt("billetes");
-            if (numBilletes == 0) {
-                numBilletes = 1;
-            }*/
         }
         tableLayout = findViewById(R.id.tlGridTable);
         btnPay = findViewById(R.id.pay);
@@ -114,6 +113,7 @@ public class StopsActivity extends AppCompatActivity {
                 if (idLinea == 0) {
                     Toast.makeText(StopsActivity.this, "Debe seleccionar una línea para pagar el viaje", Toast.LENGTH_SHORT).show();
                 } else {
+                    System.out.println("idLinea: " + idLinea);
                     showDialog(bs, horaSalida, ciudadDestino, idLinea, horaLlegada);
                 }
             }
@@ -275,16 +275,16 @@ public class StopsActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     TextView textView = textViews.get(finalI);
-                    linea[0] = textView.getText().toString();
                     if (textView.getBackground() instanceof ColorDrawable) {
-                        //System.out.println("color");
                         ColorDrawable cd = (ColorDrawable) textView.getBackground();
                         int colorCode = cd.getColor();
                         if (colorCode == Color.WHITE) {
                             for (int j = 0; j < textViews.size(); j++) {
                                 textViews.get(j).setBackgroundColor(Color.WHITE);
                             }
+                            linea[0] = textView.getText().toString();
                             textView.setBackgroundColor(Color.rgb(37, 121, 204));
+                            idLinea = 1;
                         } else if (colorCode == Color.rgb(37, 121, 204)) {
                             textView.setBackgroundColor(Color.WHITE);
                             idLinea = 0;
@@ -413,16 +413,11 @@ public class StopsActivity extends AppCompatActivity {
                 textViewNoTrip.setVisibility(View.INVISIBLE);
                 SegmentList segmentList = response.body();
                 listaSegments = new Segment[segmentList.getSegmentList().size()];
-                //System.out.println(listaHorarios.length);
-                String cadena = "";
                 tableHeader = new String[segmentList.getSegmentList().size()];
                 for (int i = 0; i < segmentList.getSegmentList().size(); i++) {
                     listaSegments[i] = segmentList.getSegmentList().get(i);
-                    //System.out.println(segmentList.getSegmentList().get(i) + "\n");
                 }
-                //System.out.println(paradas.length);
                 for (int i = 0; i < listaSegments.length; i++) {
-                    //System.out.println(listaSegments[i]);
                     tableHeader[i] = listaSegments[i].getNombre();
                 }
                 creaCabecera();
@@ -437,36 +432,35 @@ public class StopsActivity extends AppCompatActivity {
 
     class getParadasViajeTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("paradas_viaje");
-                dataOut.flush();
-                dataOut.writeUTF(ciudadOrigen + "/" + nucleoOrigen + "/" + ciudadDestino + "/" + nucleoDestino);
-                dataOut.flush();
+                outputStream.writeUTF("paradas_viaje");
+                outputStream.flush();
+                outputStream.reset();
 
-                lineasSize = dataIn.readInt();
-                String datos;
-                String[] newDatos;
+                outputStream.writeUTF(ciudadOrigen + "/" + nucleoOrigen + "/" + ciudadDestino + "/" + nucleoDestino);
+                outputStream.flush();
+                outputStream.reset();
+
+                lineasSize = inputStream.readInt();
                 for (int i = 0; i < lineasSize; i++) {
-                    String linea = dataIn.readUTF();
+                    String linea = inputStream.readUTF();
                     nombreLinea += linea + "/";
-                    int paradasSize = dataIn.readInt();
+                    int paradasSize = inputStream.readInt();
                     for (int j = 0; j < paradasSize; j++) {
-                        datos = dataIn.readUTF();
-                        newDatos = datos.split("/");
-                        Stop stop = new Stop(Integer.parseInt(newDatos[0]), newDatos[1], newDatos[2], newDatos[3], newDatos[4]);
-                        stopList.add(stop);
+                        Parada parada = (Parada) inputStream.readObject();
+                        stopList.add(parada);
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;
@@ -475,8 +469,8 @@ public class StopsActivity extends AppCompatActivity {
 
     class getIdLineaTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
         private String[] linea;
 
         public getIdLineaTask(String[] linea) {
@@ -487,14 +481,18 @@ public class StopsActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("id_linea");
-                dataOut.flush();
-                dataOut.writeUTF(linea[0]);
-                dataOut.flush();
-                idLinea = dataIn.readInt();
+                outputStream.writeUTF("id_linea");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(linea[0]);
+                outputStream.flush();
+                outputStream.reset();
+
+                idLinea = inputStream.readInt();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -504,8 +502,8 @@ public class StopsActivity extends AppCompatActivity {
 
     class getDireccionParadaTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
         private int posicion;
 
         public getDireccionParadaTask(int posicion){
@@ -516,20 +514,22 @@ public class StopsActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("direccion_parada");
-                dataOut.flush();
-                dataOut.writeUTF(tableHeader[posicion].trim());
-                dataOut.flush();
-                String direccion = dataIn.readUTF();
+                outputStream.writeUTF("direccion_parada");
+                outputStream.flush();
+                outputStream.reset();
+
+                outputStream.writeUTF(tableHeader[posicion].trim());
+                outputStream.flush();
+                outputStream.reset();
+
+                String direccion = inputStream.readUTF();
 
                 Intent intent = new Intent(StopsActivity.this, MapStopsActivity.class);
                 intent.putExtra("direccion", direccion);
                 startActivity(intent);
-                //System.out.println("parada " + tableHeader[posicion].trim());
-                //startActivity(new Intent(StopsActivity.this, MapStopsActivity.class));
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {

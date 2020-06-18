@@ -13,13 +13,15 @@ import com.proyecto.transportesbahiacadiz.R;
 
 import java.util.ArrayList;
 
+import serializable.TarjetaCredito;
+
 public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.CreditCardsViewHolder> {
     private static final String TAG = "CreditCardAdapter";
-    private ArrayList<CreditCard> itemList;
+    private ArrayList<TarjetaCredito> itemList;
     private OnItemClickListener mListener;
     private OnLongItemCliclListener longListener;
 
-    public CreditCardsAdapter(ArrayList<CreditCard> itemList, OnItemClickListener onItemClickListener, OnLongItemCliclListener onLongItemCliclListener){
+    public CreditCardsAdapter(ArrayList<TarjetaCredito> itemList, OnItemClickListener onItemClickListener, OnLongItemCliclListener onLongItemCliclListener){
         this.itemList = itemList;
         mListener = onItemClickListener;
         longListener = onLongItemCliclListener;
@@ -35,9 +37,9 @@ public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.
     @Override
     public void onBindViewHolder(@NonNull CreditCardsViewHolder holder, int position) {
         //CreditCard currentItem = itemList.get(position);
-        holder.user.setText(itemList.get(position).getCardUser());
-        holder.textNumber.setText(itemList.get(position).getTextNumber());
-        holder.cad.setText(itemList.get(position).getCad());
+        holder.user.setText(itemList.get(position).getTitular());
+        holder.textNumber.setText(itemList.get(position).getNumTarjeta());
+        holder.cad.setText(itemList.get(position).getCaducidad());
     }
 
     @Override

@@ -27,7 +27,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NewsFragment extends Fragment {
     private View view;
-    private News[] news;
     private RecyclerView recyclerView;
     private List<News> newsArrayList;
     private NewsAdapter adapter;

@@ -29,7 +29,11 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import serializable.Parada;
 
 import static com.proyecto.transportesbahiacadiz.fragments.SalePointFragment.COURSE_LOCATION;
 import static com.proyecto.transportesbahiacadiz.fragments.SalePointFragment.FINE_LOCATION;
@@ -39,7 +43,7 @@ public class StopsUserPositionActivity extends AppCompatActivity implements OnMa
     private GoogleMap map;
     private ConnectionClass connectionClass;
     private Boolean locationPermissionsGranted = false;
-    private Stop[] stops;
+    private Parada[] stops;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private Location currentLocation;
 
@@ -111,7 +115,7 @@ public class StopsUserPositionActivity extends AppCompatActivity implements OnMa
                         if(task.isSuccessful()){
                             currentLocation = (Location) task.getResult();
 
-                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 12f));
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 18f));
 
                         }else{
                             Toast.makeText(StopsUserPositionActivity.this, "unable to get current location", Toast.LENGTH_SHORT).show();
@@ -126,30 +130,26 @@ public class StopsUserPositionActivity extends AppCompatActivity implements OnMa
 
     class getParadasTask extends AsyncTask<Void, Void, Void> {
         Socket cliente;
-        DataInputStream dataIn;
-        DataOutputStream dataOut;
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
-                dataIn = new DataInputStream(cliente.getInputStream());
-                dataOut = new DataOutputStream(cliente.getOutputStream());
+                outputStream = new ObjectOutputStream(cliente.getOutputStream());
+                inputStream = new ObjectInputStream(cliente.getInputStream());
 
-                dataOut.writeUTF("paradas");
-                dataOut.flush();
+                outputStream.writeUTF("paradas");
+                outputStream.flush();
 
-                int size = dataIn.readInt();
-                stops = new Stop[size];
-                String parada;
-                String[] datos;
+                int size = inputStream.readInt();
+                stops = new Parada[size];
                 for(int i = 0; i < size; i++){
-                    parada = dataIn.readUTF();
-                    datos = parada.split("¬");
-                    Stop stop = new Stop(datos[3], datos[4]);
-                    stops[i] = stop;
+                    Parada parada = (Parada) inputStream.readObject();
+                    stops[i] = parada;
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             return null;
