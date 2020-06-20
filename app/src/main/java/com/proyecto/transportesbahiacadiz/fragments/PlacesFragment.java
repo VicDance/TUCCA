@@ -18,8 +18,6 @@ import com.proyecto.transportesbahiacadiz.adapters.PlacesAdapter;
 import com.proyecto.transportesbahiacadiz.model.Places;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -65,7 +63,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "Cádiz":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 1) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -74,7 +71,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "San Fernando":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 2) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -83,7 +79,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "Chiclana":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 3) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -92,7 +87,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "Puerto Real":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 4) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -101,7 +95,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "El Puerto de Santa María":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 5) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -110,7 +103,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "Jerez de la Frontera":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 6) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -119,7 +111,6 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
             case "Rota":
                 for (int j = 0; j < placesArrayList.size(); j++) {
                     if (placesArrayList.get(j).getIdMunicipio() == 7) {
-                        //System.out.println(placesArrayList.get(j));
                         places = new Places(placesArrayList.get(j).getLatitud(), placesArrayList.get(j).getLongitud(), placesArrayList.get(j).getNombreLugar());
                         extras.add(places);
                     }
@@ -140,15 +131,12 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
         for (int j = 0; j < cont; j++) {
             switch (j + 1) {
                 case 1:
-                    //places = new Places("Cádiz", placesArrayList.get(0).getLatitud(), placesArrayList.get(0).getLongitud());
                     cityNames.add("Cádiz");
                     break;
                 case 2:
-                    //places = new Places("San Fernando", placesArrayList.get(0).getLatitud(), placesArrayList.get(0).getLongitud());
                     cityNames.add("San Fernando");
                     break;
                 case 3:
-                    //places = new Places("San Fernando", placesArrayList.get(0).getLatitud(), placesArrayList.get(0).getLongitud());
                     cityNames.add("Chiclana");
                     break;
                 case 4:
@@ -187,9 +175,9 @@ public class PlacesFragment extends Fragment implements PlacesAdapter.OnItemClic
 
                 outputStream.writeUTF("lugares_interes");
                 outputStream.flush();
+                outputStream.reset();
+
                 int size = inputStream.readInt();
-                String texto;
-                String[] datos;
                 for (int i = 0; i < size; i++) {
                     LugarInteres lugarInteres = (LugarInteres) inputStream.readObject();
                     placesArrayList.add(lugarInteres);

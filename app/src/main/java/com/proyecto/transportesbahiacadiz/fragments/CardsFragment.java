@@ -10,7 +10,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.proyecto.transportesbahiacadiz.activities.MenuActivity;
 import com.proyecto.transportesbahiacadiz.dialogs.CardDialog;
 import com.proyecto.transportesbahiacadiz.model.CardItem;
 import com.proyecto.transportesbahiacadiz.adapters.CardsAdapter;
@@ -29,8 +27,6 @@ import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.AddCardActivity;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -45,7 +41,6 @@ public class CardsFragment extends Fragment {
     private RecyclerView recyclerView;
     private CardsAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
-    private TextView textView;
     private ArrayList<CardItem> cardItemList = null;
     private int size;
     private String[] newDatos;
@@ -58,7 +53,6 @@ public class CardsFragment extends Fragment {
     private ConnectionClass connectionClass;
     private String saldoYDescuento;
     private String numtarjeta;
-    private String estado;
 
     public CardsFragment() {
     }
@@ -74,7 +68,6 @@ public class CardsFragment extends Fragment {
             destino = getArguments().getInt("destino");
             numBilletes = getArguments().getInt("billetes");
             new getNombreMunicipioTask().execute();
-            //System.out.println(bs);
         }
         swipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         cardItemList = new ArrayList<CardItem>();
@@ -121,7 +114,6 @@ public class CardsFragment extends Fragment {
                         .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                //dialog.cancel();
                                 adapter.notifyItemChanged(viewHolder.getAdapterPosition());
                             }
                         })
@@ -305,7 +297,6 @@ public class CardsFragment extends Fragment {
                 outputStream.writeUTF("tarjeta");
                 outputStream.flush();
                 outputStream.reset();
-                //textView = view.findViewById(R.id.text_view_number_card);
                 outputStream.writeUTF(cardItemList.get(position).getTextNumber());
                 outputStream.flush();
 

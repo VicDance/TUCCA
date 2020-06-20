@@ -31,12 +31,8 @@ import static com.proyecto.transportesbahiacadiz.util.Settings.saltos_billete;
 public class FareFragment extends Fragment {
     private View view;
     private TableLayout tableLayout;
-    private LinearLayout linearLayout;
     String[] headers = {"N. Saltos", "Billete Sencillo", "T. Estándar", "T. Estudiante", "T. Jubilado"};
     private Fare[] fares;
-    private TableLayout.LayoutParams layoutParams;
-    private List<String> lista;
-    Settings settings = new Settings();
 
     public static final double DESCUENTO_ESTU = 0.7;
     public static final double DESCUENTO_JU = 0.5;

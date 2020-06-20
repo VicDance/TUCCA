@@ -23,11 +23,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.model.Stop;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -61,7 +58,6 @@ public class StopsUserPositionActivity extends AppCompatActivity implements OnMa
         map.clear();
 
         if (locationPermissionsGranted) {
-            //getDeviceLocation();
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -142,6 +138,7 @@ public class StopsUserPositionActivity extends AppCompatActivity implements OnMa
 
                 outputStream.writeUTF("paradas");
                 outputStream.flush();
+                outputStream.reset();
 
                 int size = inputStream.readInt();
                 stops = new Parada[size];

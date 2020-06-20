@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -39,6 +40,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private ImageButton datePicker;
     private TextView textView;
     private Long date;
+    private CheckBox checkBox;
     private ConnectionClass connectionClass;
 
     public static Usuario usuario;
@@ -50,6 +52,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
         connectionClass = new ConnectionClass(this);
 
+        checkBox = findViewById(R.id.checkbox_terms);
         datePicker = findViewById(R.id.button_date_picker);
         datePicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,12 +66,13 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
             @Override
             public void onClick(View v) {
                 if (compruebaCampos() && compruebaTfno(String.valueOf(editTextPhone.getText())) &&
-                        compruebaEmail(String.valueOf(editTextEmail.getText()))) {
-                    new registrarTask().execute();
+                        compruebaEmail(String.valueOf(editTextEmail.getText())) && checkBox.isSelected()) {
+                    new registrarTask(editTextUser.getText().toString(), editTextPassword.getText().toString(), editTextEmail.getText().toString()
+                    , date, Integer.parseInt(editTextPhone.getText().toString())).execute();
                 }else{
                     new AlertDialog.Builder(RegisterActivity.this)
-                            .setTitle("Campos vacios")
-                            .setMessage("Hay campos sin rellenar")
+                            .setTitle(getString(R.string.empty))
+                            .setMessage(getString(R.string.empty_fields))
                             .show();
                 }
             }
@@ -112,7 +116,6 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         String emailAValidar = email;
         Matcher mather = pattern.matcher(emailAValidar);
         if (mather.find() == true) {
-            System.out.println("El email ingresado es válido.");
             valido = true;
         } else {
             System.out.println("El email ingresado es inválido.");
@@ -152,6 +155,17 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         Socket cliente;
         ObjectOutputStream outputStream;
         ObjectInputStream inputStream;
+        private String nombre, contraseña, correo;
+        private long dateLong;
+        private int tfno;
+
+        public registrarTask(String nombre, String contraseña, String correo, long dateLong, int tfno){
+            this.nombre = nombre;
+            this.contraseña = contraseña;
+            this.correo = correo;
+            this.dateLong = dateLong;
+            this.tfno = tfno;
+        }
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -168,9 +182,12 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                 outputStream.flush();
                 outputStream.reset();
 
-                serializable.Usuario user = new serializable.Usuario(editTextUser.getText().toString(), editTextPassword.getText().toString(), editTextEmail.getText().toString(),
-                        new Date(date), Integer.parseInt(editTextPhone.getText().toString()));
+                serializable.Usuario user = new serializable.Usuario(nombre, contraseña, correo,
+                        new Date(dateLong), tfno);
+
                 outputStream.writeObject(user);
+                outputStream.flush();
+                outputStream.reset();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -184,7 +201,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
             System.out.println(usuario);
             new AlertDialog.Builder(RegisterActivity.this)
                     .setTitle(getString(R.string.correct))
-                    .setMessage("Se ha registrado satisfactoriamente")
+                    .setMessage(getString(R.string.register))
                     .show();
         }
     }

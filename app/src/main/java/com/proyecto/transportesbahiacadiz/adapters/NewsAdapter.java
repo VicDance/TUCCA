@@ -13,9 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.model.News;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static android.text.Layout.JUSTIFICATION_MODE_INTER_WORD;
 

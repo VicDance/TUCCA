@@ -1,32 +1,26 @@
 <resources>
-    <string name="app_name">Transportes Bahía de Cádiz</string>
+    <string name="app_name" translatable="false">Transportes Bahía de Cádiz</string>
     <string name="main">Principal</string>
     <string name="trip">Realizar viaje</string>
-    <string name="lines">Mapa de líneas</string>
     <string name="cards">Mis tarjetas</string>
     <string name="sales">Puntos de venta</string>
     <string name="gap_fare">Saltos y tarifas</string>
     <string name="gap">Saltos</string>
     <string name="fare">Tarifas</string>
     <string name="interest">Zonas de interés</string>
-    <string name="login">Acceder/Registrarse</string>
     <string name="settings">Ajustes</string>
     <string name="me">Yo</string>
-    <string name="about">Acerca de</string>
     <string name="news">Últimas noticias</string>
-    <string name="navigation_drawer_open">Open Navigation Drawer</string>
-    <string name="navigation_drawer_close">Close Navigation Drawer</string>
-    <string name="search_hint">Introduzca código o nombre de parada</string>
+    <string name="navigation_drawer_open" translatable="false">Open Navigation Drawer</string>
+    <string name="navigation_drawer_close" translatable="false">Close Navigation Drawer</string>
     <string name="fare_system">Zonas del sistema tarifario</string>
     <string name="location_title">¿Quiere buscar paradas cercanas a su posicion?</string>
-    <string name="select_location">Seleccione una dirección</string>
     <string name="accept">Aceptar</string>
     <string name="cancel">Cancelar</string>
     <string name="origin_city">Municipio origen</string>
     <string name="destiny_city">Municipio destino</string>
     <string name="origin_centre">Núcleo origen</string>
     <string name="destiny_centre">Núcleo destino</string>
-    <!--<string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCG8b65kHX5KO5JlD_KK2wdwiPPYcmzTaQ</string>-->
     <string name="usuario">Usuario</string>
     <string name="password">Contraseña</string>
     <string name="password_again">Repita contraseña</string>
@@ -35,11 +29,7 @@
     <string name="email">Correo electrónico</string>
     <string name="phone">Teléfono</string>
     <string name="terms">Acepto los términos y las condiciones de uso</string>
-    <string name="line">Línea</string>
-    <string name="stops">Paradas</string>
-    <string name="frequency">Frecuencia</string>
     <string name="btn_search_trip">Buscar viaje</string>
-    <string name="btn_pay_trip">Pagar viaje</string>
     <string name="everyday_card">Tarjeta estándar</string>
     <string name="retired_card">Tarjeta jubilados</string>
     <string name="student_card">Tarjeta estudiante</string>
@@ -50,7 +40,6 @@
     <string name="correct">Correcto</string>
     <string name="incorrect">Incorrecto</string>
     <string name="incorrect_message">No se pudo completar la operación</string>
-    <string name="invalid">Inválido</string>
     <string name="deleteCard">Borrar tarjeta</string>
     <string name="textDeleteCard">¿Está seguro de querer borrar la tarjeta?</string>
     <string name="money">Saldo</string>
@@ -61,18 +50,13 @@
     <string name="payment_instruction">Ponga el dispositivo hacia abajo para realizar el pago</string>
     <string name="no_money">Para utilizar la tarjeta, debe tener saldo</string>
     <string name="insert_quantity">Introduzca cantidad para la recarga</string>
-    <string name="no_user">Debe iniciar sesión para ver sus datos</string>
     <string name="centre">Núcleo</string>
     <string name="change_image">Cambiar imágen</string>
-    <string name="camera">Elegir foto existente</string>
-    <string name="existing_photo">Tomar foto</string>
     <string name="no_trip">No existen líneas</string>
     <string name="done">Viajes hechos</string>
     <string name="next_trip">Viajes por hacer</string>
     <string name="scan">Escanear código</string>
-    <string name="choose_city">Elija municipio</string>
     <string name="search">Buscar</string>
-    <string name="location">Cerca de mi ubicación</string>
     <string name="price">Coste billete:</string>
     <string name="tickets">Billetes</string>
     <string name="tickets_number">¿Cuántos billetes desea comprar?</string>
@@ -87,9 +71,22 @@
     <string name="port">Puerto del servidor</string>
     <string name="connection_established">Conexión establecida</string>
     <string name="impossible_to_connect">No se pudo conectar</string>
+    <string name="empty_fields">Alguno de los campos está vacío</string>
     <string name="email_success">Correo enviado con éxito</string>
     <string name="empty">Campos vacíos</string>
     <string name="empty_message">Debe rellenar todos los campos para continuar</string>
     <string name="username_long">Nombre demasiado largo</string>
     <string name="username_long_message">La longitud del texto es mayor que la permitida</string>
+    <string name="create_card">¿Crear tarjeta?</string>
+    <string name="create_card_daily">¿Quiere crear una tarjeta tipo estándar?</string>
+    <string name="create_card_student">¿Quiere crear una tarjeta tipo estudiante?</string>
+    <string name="create_card_retired">¿Quiere crear una tarjeta tipo jubilado?</string>
+    <string name="create_card_successful">Tarjeta creada correctamente</string>
+    <string name="create_card_unsuccessful">No se pudo crear la tarjeta</string>
+    <string name="new_card">Se ha registrado una nueva tarjeta</string>
+    <string name="register">Se ha registrado satisfactoriamente</string>
+    <string name="user_incorrect">Usuario o contraseña incorrectos</string>
+    <string name="select_line">Debe seleccionar una línea para pagar</string>
+    <string name="continue_no_user">Continuar como invitado</string>
+    <string name="keep_login">No cerrar sesión</string>
 </resources>

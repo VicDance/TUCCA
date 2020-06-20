@@ -2,16 +2,12 @@ package com.proyecto.transportesbahiacadiz.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +15,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.proyecto.transportesbahiacadiz.BuildConfig;
 import com.proyecto.transportesbahiacadiz.R;
 
 public class SettingsFragment extends Fragment {
@@ -47,9 +42,7 @@ public class SettingsFragment extends Fragment {
                 emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject.getText().toString());
                 emailIntent.putExtra(Intent.EXTRA_TEXT, message.getText().toString());
-                //if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-                    startActivityForResult(Intent.createChooser(emailIntent, getString(R.string.select_application)), MAIL);
-                //}
+                startActivityForResult(Intent.createChooser(emailIntent, getString(R.string.select_application)), MAIL);
 
             }
         });

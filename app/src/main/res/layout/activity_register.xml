@@ -64,19 +64,13 @@
             android:layout_height="50dp"
             android:src="@drawable/ic_date"
             android:background="@android:color/white"/>
-        <!--<EditText
-            android:id="@+id/edit_text_register_date"
-            android:layout_width="300dp"
-            android:layout_height="50dp"
-            android:hint="@string/phone"
-            android:textSize="20sp"
-            android:inputType="date"
-            android:layout_marginBottom="30dp"/>-->
 
         <CheckBox
+            android:id="@+id/checkbox_terms"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/terms"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="30dp"
             android:checked="true"/>
         <Button

@@ -50,7 +50,6 @@ public class MapInterestingPlacesActivity extends AppCompatActivity implements O
         String longitud;
         LatLng punto = null;
         if (locationPermissionsGranted) {
-            //getDeviceLocation();
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

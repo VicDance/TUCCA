@@ -30,8 +30,6 @@ import com.proyecto.transportesbahiacadiz.model.SegmentList;
 import com.proyecto.transportesbahiacadiz.model.Stop;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -63,7 +61,6 @@ public class StopsActivity extends AppCompatActivity {
     private String[] tableHeader;
     private List<Parada> stopList = new ArrayList<Parada>();
     private TableLayout tableLayout;
-    private Stop[] paradas;
     private int length;
     private String nombreLinea = "";
     private int idLinea = 0;
@@ -103,7 +100,6 @@ public class StopsActivity extends AppCompatActivity {
         }
         tableLayout = findViewById(R.id.tlGridTable);
         btnPay = findViewById(R.id.pay);
-        System.out.println("Login " + login);
         if (!login) {
             btnPay.setVisibility(View.INVISIBLE);
         }
@@ -111,9 +107,8 @@ public class StopsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (idLinea == 0) {
-                    Toast.makeText(StopsActivity.this, "Debe seleccionar una línea para pagar el viaje", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StopsActivity.this, getString(R.string.select_line), Toast.LENGTH_SHORT).show();
                 } else {
-                    System.out.println("idLinea: " + idLinea);
                     showDialog(bs, horaSalida, ciudadDestino, idLinea, horaLlegada);
                 }
             }

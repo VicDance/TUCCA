@@ -60,7 +60,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
                     android:layout_marginTop="20dp"
-                    android:text="No cerrar sesión"/>
+                    android:text="@string/keep_login"/>
 
                 <ImageButton
                     android:id="@+id/button_select_ip"
@@ -99,7 +99,7 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="600dp"
-            android:text="Continuar como invitado"
+            android:text="@string/continue_no_user"
             android:textSize="20sp"/>
     </RelativeLayout>
 </androidx.core.widget.NestedScrollView>

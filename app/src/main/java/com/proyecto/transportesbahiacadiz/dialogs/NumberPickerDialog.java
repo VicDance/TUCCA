@@ -77,7 +77,6 @@ public class NumberPickerDialog extends DialogFragment {
                         .putExtra("salida", horaSalida)
                         .putExtra("destino", idCiudadDestino)
                         .putExtra("billetes", numberPicker.getValue()));
-                //System.out.println("Billetes: " + numberPicker.getValue());
             }
         });
         cancel.setOnClickListener(new View.OnClickListener() {

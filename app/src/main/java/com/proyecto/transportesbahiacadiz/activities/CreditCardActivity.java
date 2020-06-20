@@ -15,13 +15,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.proyecto.transportesbahiacadiz.dialogs.ReloadDialog;
-import com.proyecto.transportesbahiacadiz.model.CreditCard;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.adapters.CreditCardsAdapter;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

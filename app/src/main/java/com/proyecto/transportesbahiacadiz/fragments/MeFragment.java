@@ -3,31 +3,14 @@ package com.proyecto.transportesbahiacadiz.fragments;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageDecoder;
-import android.graphics.drawable.Drawable;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.provider.Settings;
-import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,34 +20,20 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.proyecto.transportesbahiacadiz.BuildConfig;
 import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.activities.ChangeProfileActivity;
 import com.proyecto.transportesbahiacadiz.activities.CreditCardActivity;
-import com.proyecto.transportesbahiacadiz.activities.MainActivity;
 import com.proyecto.transportesbahiacadiz.activities.MenuActivity;
 import com.proyecto.transportesbahiacadiz.model.Usuario;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
-//import com.squareup.picasso.Picasso;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.URL;
 
-import static android.provider.Settings.Global.AIRPLANE_MODE_ON;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.getDatos;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.guardaEstado;
 import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
@@ -159,7 +128,6 @@ public class MeFragment extends Fragment {
     }
 
     public void cambiaImagen(Usuario usuario) {
-        System.out.println("Usuario: " + usuario.getImagen());
         try {
             if (usuario.getImagen().toString().equals("null") || usuario.getImagen().toString().length() == 0 || usuario.getImagen() == null ||
                     usuario.getImagen().toString().equalsIgnoreCase("imagen")) {
@@ -215,7 +183,6 @@ public class MeFragment extends Fragment {
             usuario.setFecha_nac(user.getFecha_nac().toString());
             usuario.setTfno(user.getTfno());
             usuario.setImagen(user.getImagen());
-            //System.out.println(usuario);
 
             nombre = usuario.getNombre();
             contraseña = usuario.getContraseña();

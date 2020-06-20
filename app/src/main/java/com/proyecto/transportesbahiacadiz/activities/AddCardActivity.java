@@ -14,8 +14,6 @@ import com.proyecto.transportesbahiacadiz.R;
 import com.proyecto.transportesbahiacadiz.model.CodigoQR;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -46,69 +44,39 @@ public class AddCardActivity extends AppCompatActivity {
         textViewDailyCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(AddCardActivity.this)
-                        .setTitle("Crear tarjeta")
-                        .setMessage("¿Quiere crear una tarjeta tipo estándar?")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                //Toast.makeText(AddCardActivity.this, "Se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                                new addCardTask("tarjeta_es").execute();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //dialog.cancel();
-                                Toast.makeText(AddCardActivity.this, "No se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .show();
+                showAlertCard(getString(R.string.create_card), getString(R.string.create_card_daily));
             }
         });
         textViewRetiredCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(AddCardActivity.this)
-                        .setTitle("Crear tarjeta")
-                        .setMessage("¿Quiere crear una tarjeta tipo jubilado?")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                //Toast.makeText(AddCardActivity.this, "Se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                                new addCardTask("tarjeta_ju").execute();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //dialog.cancel();
-                                Toast.makeText(AddCardActivity.this, "No se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .show();
+                showAlertCard(getString(R.string.create_card), getString(R.string.create_card_retired));
             }
         });
         textViewStudentCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(AddCardActivity.this)
-                        .setTitle("Crear tarjeta")
-                        .setMessage("¿Quiere crear una tarjeta tipo estudiante?")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                //Toast.makeText(AddCardActivity.this, "Se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                                new addCardTask("tarjeta_estu").execute();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //dialog.cancel();
-                                Toast.makeText(AddCardActivity.this, "No se creó la tarjeta", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .show();
+                showAlertCard(getString(R.string.create_card), getString(R.string.create_card_student));
             }
         });
+    }
+
+    private void showAlertCard(String title, String body){
+        new AlertDialog.Builder(AddCardActivity.this)
+                .setTitle(title)
+                .setMessage(body)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        new addCardTask("tarjeta_estu").execute();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(AddCardActivity.this, "No se creó la tarjeta", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     class addCardTask extends AsyncTask<Void, Void, Void> {
@@ -136,7 +104,6 @@ public class AddCardActivity extends AppCompatActivity {
 
                     final Random rnd = new Random();
                     long numTarjeta = rnd.nextLong();
-                    //System.out.println(dig13);
                     outputStream.writeUTF(numTarjeta + "/" + usuario.getId());
                     outputStream.flush();
                     outputStream.reset();
@@ -158,12 +125,12 @@ public class AddCardActivity extends AppCompatActivity {
                 codigoQR = new CodigoQR();
                 new AlertDialog.Builder(AddCardActivity.this)
                         .setTitle(R.string.correct)
-                        .setMessage("Tarjeta creada correctamente")
+                        .setMessage(getString(R.string.create_card_successful))
                         .show();
             } else {
                 new AlertDialog.Builder(AddCardActivity.this)
                         .setTitle(R.string.incorrect)
-                        .setMessage("No se pudo crear la tarjeta")
+                        .setMessage(getString(R.string.create_card_unsuccessful))
                         .show();
             }
         }

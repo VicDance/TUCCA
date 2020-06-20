@@ -68,9 +68,7 @@ public class ChangeProfileActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int id = intent.getIntExtra("id", 1);
-        //System.out.println("id: " + id);
         byte[] imagen = intent.getByteArrayExtra("imagen");
-        //System.out.println("Imagen: " + imagen);
 
         connectionClass = new ConnectionClass(this);
 
@@ -122,22 +120,9 @@ public class ChangeProfileActivity extends AppCompatActivity {
                             .setIcon(R.drawable.alerter_ic_notifications)
                             .setBackgroundColorRes(R.color.alerter_login)
                             .setDuration(1550)
-                            .enableSwipeToDismiss() //seems to not work well with OnClickListener
+                            .enableSwipeToDismiss()
                             .enableProgress(true)
                             .setProgressColorRes(R.color.colorPrimary)
-                            .setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    //do something when Alerter message was clicked
-
-                                }
-                            })
-                            .setOnShowListener(new OnShowAlertListener() {
-                                @Override
-                                public void onShow() {
-                                    //do something when Alerter message shows
-                                }
-                            })
                             .setOnHideListener(new OnHideAlertListener() {
                                 @Override
                                 public void onHide() {
@@ -226,13 +211,6 @@ public class ChangeProfileActivity extends AppCompatActivity {
                 Bitmap ScaledBmp = Bitmap.createScaledBitmap(photo, 400,450, true);
                 imageViewProfile.setImageBitmap(ScaledBmp);
 
-                /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-
-                String encoded_image = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-
-                usuario.setImagen(encoded_image);*/
                 ByteArrayOutputStream baos = new ByteArrayOutputStream(20480);
                 ScaledBmp.compress(Bitmap.CompressFormat.PNG, 0 , baos);
                 byte[] blob = baos.toByteArray();
@@ -250,22 +228,6 @@ public class ChangeProfileActivity extends AppCompatActivity {
                 ScaledBmp.compress(Bitmap.CompressFormat.PNG, 0 , baos);
                 byte[] blob = baos.toByteArray();
                 usuario.setImagen(blob);
-                //System.out.println(blob);
-                /*InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
-
-                Bitmap ScaledBmp = Bitmap.createScaledBitmap(bmp, 400,450, true);
-                imageViewProfile.setImageBitmap(ScaledBmp);
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                ScaledBmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-
-                String encoded_image = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-
-                usuario.setImagen(encoded_image);*/
-                //System.out.println("Imagen: " + usuario.getImagen());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -289,7 +251,6 @@ public class ChangeProfileActivity extends AppCompatActivity {
                 outputStream.reset();
 
                 user = new serializable.Usuario(usuario.getId(), usuario.getNombre(), usuario.getContraseña(), usuario.getCorreo(), usuario.getImagen());
-                //cliente2 = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
                 outputStream.writeObject(user);
                 outputStream.flush();
                 outputStream.reset();

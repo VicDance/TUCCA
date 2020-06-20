@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.proyecto.transportesbahiacadiz.model.CreditCard;
 import com.proyecto.transportesbahiacadiz.R;
 
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import serializable.TarjetaCredito;
 
 public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.CreditCardsViewHolder> {
-    private static final String TAG = "CreditCardAdapter";
     private ArrayList<TarjetaCredito> itemList;
     private OnItemClickListener mListener;
     private OnLongItemCliclListener longListener;
@@ -36,7 +34,6 @@ public class CreditCardsAdapter extends RecyclerView.Adapter<CreditCardsAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull CreditCardsViewHolder holder, int position) {
-        //CreditCard currentItem = itemList.get(position);
         holder.user.setText(itemList.get(position).getTitular());
         holder.textNumber.setText(itemList.get(position).getNumTarjeta());
         holder.cad.setText(itemList.get(position).getCaducidad());

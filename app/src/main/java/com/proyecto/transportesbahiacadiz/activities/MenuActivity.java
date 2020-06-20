@@ -48,8 +48,6 @@ import static com.proyecto.transportesbahiacadiz.activities.MainActivity.login;
 import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class MenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
-    public static final String STRING_PREFERENCES = "fragments";
-    public static final String PREFERENCE_STATUS = "estado.button.sesion";
     private DrawerLayout drawerLayout;
     private ImageView userImage;
     private int id;
@@ -86,7 +84,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
         }else{
             navigationView.getMenu().removeItem(R.id.nav_sign_up);
             Bundle extras = getIntent().getExtras();
-            //String newString;
             if(extras == null) {
                 newString= null;
             } else {
@@ -107,7 +104,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                     cardsFragment.setArguments(bundle);
                     new TaskCambiarFragment().execute(cardsFragment);
                 }
-                //System.out.println(newString);
                 View headView = navigationView.getHeaderView(0);
                 TextView textView = headView.findViewById(R.id.text_view_name);
                 userImage = headView.findViewById(R.id.user_image);
@@ -144,18 +140,15 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
         switch (menuItem.getItemId()){
             case R.id.nav_home:
                 new TaskCambiarFragment().execute(new MainFragment());
-                //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MainFragment()).commit();
                 break;
             case R.id.nav_trip:
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TripFragment()).commit();
                 break;
             case R.id.nav_cards:
                 new TaskCambiarFragment().execute(new CardsFragment());
-                //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CardsFragment()).commit();
                 break;
             case R.id.nav_sales:
                 new TaskCambiarFragment().execute(new SalePointFragment());
-                //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SalePointFragment()).commit();
                 break;
             case R.id.nav_log:
                 new TaskCambiarFragment().execute(new MeFragment());
@@ -217,8 +210,8 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 outputStream.writeUTF(getDatos(MenuActivity.this));
                 outputStream.flush();
                 outputStream.reset();
+
                 serializable.Usuario us= (serializable.Usuario) inputStream.readObject();
-                //System.out.println(us);
                 usuario = new Usuario();
                 usuario.setId(us.getId());
                 usuario.setNombre(us.getNombre());

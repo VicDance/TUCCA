@@ -104,13 +104,12 @@ public class NewCreditCardActivity extends AppCompatActivity {
                 outputStream.flush();
                 outputStream.reset();
 
-                System.out.println(usuario.getId());
                 outputStream.writeUTF(scanResult.getRedactedCardNumber() + "-" + usuario.getId() + "-" + caducidad + "-"
                         + titular);
                 outputStream.flush();
                 outputStream.reset();
+
                 estado = inputStream.readUTF();
-                //System.out.println(estado);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -123,7 +122,7 @@ public class NewCreditCardActivity extends AppCompatActivity {
             if(estado.equalsIgnoreCase("correcto")){
                 new AlertDialog.Builder(NewCreditCardActivity.this)
                         .setTitle(R.string.correct)
-                        .setMessage("Se ha ingresado una nueva tarjeta")
+                        .setMessage(getString(R.string.new_card))
                         .show();
             }else {
                 System.out.println("error");

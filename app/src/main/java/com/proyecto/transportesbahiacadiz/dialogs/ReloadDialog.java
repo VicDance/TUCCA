@@ -49,7 +49,6 @@ public class ReloadDialog extends DialogFragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //System.out.println(message);
                 new reloadTask().execute();
             }
         });

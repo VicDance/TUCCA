@@ -3,7 +3,6 @@ package com.proyecto.transportesbahiacadiz.dialogs;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -18,7 +17,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-import androidx.transition.Visibility;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,8 +32,6 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 
 import net.glxn.qrgen.android.QRCode;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -43,11 +39,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static com.proyecto.transportesbahiacadiz.activities.AddCardActivity.codigoQR;
-import static com.proyecto.transportesbahiacadiz.activities.RegisterActivity.usuario;
 
 public class CardDialog extends DialogFragment {
     private View view;
@@ -56,8 +50,6 @@ public class CardDialog extends DialogFragment {
     private Button btnQr;
     private ImageView imageViewQr;
     private TextView textView;
-    private TextView textViewPrecio;
-    private String saldoYDescuento;
     private String numtarjeta;
     double saldo;
     double descuento;
@@ -83,7 +75,6 @@ public class CardDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         cont = 1;
-        //System.out.println(cont);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_card, null);
@@ -93,8 +84,6 @@ public class CardDialog extends DialogFragment {
         imageViewQr = view.findViewById(R.id.image_view_qr);
         imageViewQr.setVisibility(View.GONE);
 
-        System.out.println("Saldo: " + saldo);
-        System.out.println("Descuento: " + descuento);
         textView.setText(saldo + " €");
 
         new getCodigoQRTask().execute();
@@ -171,7 +160,6 @@ public class CardDialog extends DialogFragment {
     }
 
     private void compruebaPosicion() {
-        //final int[] cont = {1};
         SensorManager sensorManager;
         Sensor rotationSensor;
         SensorEventListener sensorEventListener;
@@ -191,10 +179,8 @@ public class CardDialog extends DialogFragment {
                 for (int i = 0; i < 3; i++) {
                     orientations[i] = (float) (Math.toDegrees(orientations[i]));
                 }
-                if (orientations[1] <= -45 /*&& cont == 1*/) {
-                    //System.out.println("entra comprueba");
+                if (orientations[1] <= -45) {
                     if (cont == 1) {
-                        //System.out.println(cont);
                         if (saldo < (bs - (bs * descuento)) * numBilletes) {
                             new AlertDialog.Builder(getContext())
                                     .setTitle(R.string.attention)
@@ -223,7 +209,6 @@ public class CardDialog extends DialogFragment {
                             mediaPlayer.start();
                             cont++;
 
-                            //generar codigo qr
                             DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
                             java.util.Date horaActual = new java.util.Date();
                             horaCodigo = dateFormat.format(horaActual);

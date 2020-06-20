@@ -221,23 +221,18 @@ public class MainFragment extends Fragment {
                 for (int i = 0; i < trips.length; i++) {
                     content = "- Línea: " + trips[i].getLinea() + " Municipio de destino: " + trips[i].getMunicipio() + " Hora de salida: " +
                             trips[i].getHoraSalida() + " Fecha del viaje: " + sdf.format(trips[i].getFechaViaje()) + "\n";
-                    //viajes.add(content);
                     String fechaActual = sdf.format(date);
                     String fechaViaje = sdf.format(trips[i].getFechaViaje());
                     if (compruebaFecha(fechaViaje, fechaActual)) {
                         String horaActual = sdfHora.format(date);
                         String respuesta = compruebaHora(trips[i].getHoraSalida(), horaActual);
                         if (respuesta.equals("mayor")) {
-                            //viajes a realizar
                             viajesARealizar.add(content);
                         } else {
-                            //ya realizados
                             viajesRealizados.add(content);
                         }
                     } else {
-                        //poner en viajes ya realizados
                         viajesRealizados.add(content);
-                        //System.out.println(viajesRealizados.get(0));
                     }
                 }
             } catch (IOException e) {
@@ -273,10 +268,8 @@ public class MainFragment extends Fragment {
                 size = inputStream.readInt();
                 zonas = new Zona[size];
                 for (int i = 0; i < size; i++) {
-                    //String datos;
                     try {
                         Zona zona = (Zona) inputStream.readObject();
-                        //System.out.println(zona);
                         zones.add(zona);
                     } catch (IOException ex) {
                         Logger.getLogger(TripFragment.class.getName()).log(Level.SEVERE, null, ex);

@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.model.Zone;
 
 import java.util.ArrayList;
 
@@ -32,7 +31,6 @@ public class ZoneAdapter extends RecyclerView.Adapter<ZoneAdapter.ZoneViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ZoneViewHolder holder, int position) {
-        //CreditCard currentItem = itemList.get(position);
         holder.letter.setText(itemList.get(position).getIdZona());
         holder.letter.setBackgroundColor(Color.parseColor(itemList.get(position).getColor()));
         holder.zone.setText(itemList.get(position).getNombreZona());

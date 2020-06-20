@@ -38,7 +38,6 @@ public class CardsAdapter extends RecyclerView.Adapter<CardsAdapter.CardsViewHol
                 public void onClick(View v) {
                     if(listener != null){
                         int position = getAdapterPosition();
-                        //System.out.println("Posicion " + position);
                         if(position != RecyclerView.NO_POSITION){
                             listener.onItemClick(position);
                         }

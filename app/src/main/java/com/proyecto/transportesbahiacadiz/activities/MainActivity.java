@@ -1,7 +1,6 @@
 package com.proyecto.transportesbahiacadiz.activities;
 
 import android.app.Dialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,8 +26,6 @@ import com.proyecto.transportesbahiacadiz.db.DataBaseRoom;
 import com.proyecto.transportesbahiacadiz.util.Connection;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import com.tapadoo.alerter.Alerter;
-import com.tapadoo.alerter.OnHideAlertListener;
-import com.tapadoo.alerter.OnShowAlertListener;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -113,28 +109,9 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                                 .setIcon(R.drawable.alerter_ic_notifications)
                                 .setBackgroundColorRes(R.color.alerter_login)
                                 .setDuration(2100)
-                                .enableSwipeToDismiss() //seems to not work well with OnClickListener
+                                .enableSwipeToDismiss()
                                 .enableProgress(true)
                                 .setProgressColorRes(R.color.black)
-                                .setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        //do something when Alerter message was clicked
-
-                                    }
-                                })
-                                .setOnShowListener(new OnShowAlertListener() {
-                                    @Override
-                                    public void onShow() {
-                                        //do something when Alerter message shows
-                                    }
-                                })
-                                .setOnHideListener(new OnHideAlertListener() {
-                                    @Override
-                                    public void onHide() {
-                                        //do something when Alerter message hides
-                                    }
-                                })
                                 .show();
                     }
                 });
@@ -173,7 +150,9 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                login();
+                String nombre = editTextUser.getText().toString();
+                String contraseña = editTextPassword.getText().toString();
+                login(nombre, contraseña);
             }
         });
 
@@ -207,8 +186,8 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
         return preferences.getString(STRING_NAME_PREFERENCES, "");
     }
 
-    private void login() {
-        loginTask loginTask = new loginTask();
+    private void login(String nombre, String contraseña) {
+        loginTask loginTask = new loginTask(nombre, contraseña);
         loginTask.execute();
     }
 
@@ -231,6 +210,12 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
         Socket cliente;
         ObjectOutputStream outputStream;
         ObjectInputStream inputStream;
+        private String nombre, contraseña;
+
+        public loginTask(String nombre, String contraseña){
+            this.nombre = nombre;
+            this.contraseña = contraseña;
+        }
 
         @Override
         protected Void doInBackground(String... strings) {
@@ -243,21 +228,18 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                     cliente = new Socket(connectionClass.getConnection().get(0).getAddress(), connectionClass.getConnection().get(0).getPort());
                     System.out.println("direccion: " + connectionClass.getConnection().get(0).getAddress());
                     System.out.println("puerto: " + connectionClass.getConnection().get(0).getPort());
-                    /*dataOut = new DataOutputStream(cliente.getOutputStream());
-                    dataIn = new DataInputStream(cliente.getInputStream());*/
                     outputStream = new ObjectOutputStream(cliente.getOutputStream());
                     inputStream = new ObjectInputStream(cliente.getInputStream());
-                    if (editTextUser.getText().length() != 0 && editTextPassword.getText().length() != 0) {
-                        //try {
+                    if (nombre.length() != 0 && contraseña.length() != 0) {
                         outputStream.writeUTF("inicio");
                         outputStream.flush();
                         outputStream.reset();
 
-                        outputStream.writeUTF(editTextUser.getText().toString().trim());
+                        outputStream.writeUTF(nombre.trim());
                         outputStream.flush();
                         outputStream.reset();
 
-                        outputStream.writeUTF(editTextPassword.getText().toString());
+                        outputStream.writeUTF(contraseña);
                         outputStream.flush();
                         outputStream.reset();
 
@@ -265,8 +247,8 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                         System.out.println(respuesta);
                     } else {
                         new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("No se pudo conectar")
-                                .setMessage("Alguno de los campos está vacío")
+                                .setTitle(getString(R.string.impossible_to_connect))
+                                .setMessage(getString(R.string.empty_fields))
                                 .show();
                     }
                 } catch (UnknownHostException e) {
@@ -289,7 +271,6 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                 if (respuesta.trim().contains("cliente")) {
                     try {
                         idCliente = inputStream.readInt();
-                        //System.out.println("id: " + idCliente);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -307,7 +288,7 @@ public class MainActivity extends AppCompatActivity /*implements NavigationView.
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
                             .setTitle(getString(R.string.impossible_to_connect))
-                            .setMessage("Usuario o contraseña incorrectos")
+                            .setMessage(getString(R.string.user_incorrect))
                             .show();
                 }
             }

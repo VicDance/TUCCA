@@ -53,7 +53,6 @@ import serializable.Nucleo;
 public class SalePointFragment extends Fragment implements OnMapReadyCallback {
     private View view;
     private GoogleMap map;
-    private FusedLocationProviderClient fusedLocationProviderClient;
     private Spinner spinner;
     private ArrayAdapter<String> adapterCentre;
     private Nucleo[] nucleos;
@@ -191,6 +190,8 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
 
                 outputStream.writeUTF("puntos_venta");
                 outputStream.flush();
+                outputStream.reset();
+
                 int size = inputStream.readInt();
                 nucleos = new Nucleo[size];
                 nombreNucleos = new String[size];
@@ -225,9 +226,13 @@ public class SalePointFragment extends Fragment implements OnMapReadyCallback {
                 inputStream = new ObjectInputStream(cliente.getInputStream());
 
                 outputStream.writeUTF("puntos_venta_mapa");
+                outputStream.flush();
+                outputStream.reset();
+
                 outputStream.writeInt(idNucleo);
                 outputStream.flush();
-                System.out.println(idNucleo);
+                outputStream.reset();
+
                 int puntosSize = inputStream.readInt();
                 String direcciones;
                 for (int x = 0; x < puntosSize; x++) {

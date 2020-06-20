@@ -25,8 +25,6 @@ import com.proyecto.transportesbahiacadiz.model.GapList;
 import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -84,7 +82,6 @@ public class GapFragment extends Fragment {
                 gaps = new Gap[gapList.getGapList().size()];
                 for (int i = 0; i < gapList.getGapList().size(); i++) {
                     gaps[i] = gapList.getGapList().get(i);
-                    //System.out.println(gaps[i]);
                 }
                 cogeDatosBbdd();
             }

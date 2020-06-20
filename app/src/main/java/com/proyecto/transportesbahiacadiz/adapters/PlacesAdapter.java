@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.model.Places;
 
 import java.util.ArrayList;
 

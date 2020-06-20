@@ -1,17 +1,11 @@
 package com.proyecto.transportesbahiacadiz.fragments;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -23,13 +17,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.proyecto.transportesbahiacadiz.interfaces.FareSystemAPI;
 import com.proyecto.transportesbahiacadiz.activities.StopsActivity;
@@ -44,8 +36,6 @@ import com.proyecto.transportesbahiacadiz.util.ConnectionClass;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCentre;
 import com.proyecto.transportesbahiacadiz.viewmodel.LiveDataCity;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -80,8 +70,6 @@ public class TripFragment extends Fragment {
     private ArrayAdapter<String> adapterDestinyCities;
     private ArrayAdapter<String> adapterDestinyCentre;
     private Button btnSearch;
-    private Button btnPay;
-    private TextView textViewLines;
     private TextView textViewPrice;
     private int size;
     private LiveDataCity liveDataCity;
@@ -347,7 +335,6 @@ public class TripFragment extends Fragment {
         for (Map.Entry<Integer, Double> entry : saltos_billete.entrySet()) {
             if (entry.getKey() == salto) {
                 bs = entry.getValue();
-                System.out.println("Bs " + bs);
                 textViewPrice.setText(getString(R.string.price) + " " + bs + "€");
             }
         }
@@ -357,7 +344,6 @@ public class TripFragment extends Fragment {
         for (int i = 0; i < gaps.length; i++) {
             if (zonaDestino.equalsIgnoreCase(gaps[i].getZonaOrigen()) && zonaOrigen.equalsIgnoreCase(gaps[i].getZonaDestino())) {
                 saltos = gaps[i].getSaltos();
-                System.out.println("Saltos: " + saltos);
             }
         }
     }
@@ -376,6 +362,8 @@ public class TripFragment extends Fragment {
 
                 outputStream.writeUTF("municipios");
                 outputStream.flush();
+                outputStream.reset();
+
                 size = inputStream.readInt();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -432,6 +420,7 @@ public class TripFragment extends Fragment {
 
                 outputStream.writeUTF("nucleos");
                 outputStream.flush();
+                outputStream.reset();
 
                 size = inputStream.readInt();
             } catch (IOException e) {

@@ -47,11 +47,9 @@ public class NewsFragment extends Fragment {
             @Override
             public void onResponse(Call<NewsList> call, Response<NewsList> response) {
                 NewsList newsList = response.body();
-                //news = new News[newsList.getNewsList().size()];
                 for(int i = 0; i < newsList.getNewsList().size(); i++){
                     if(newsList.getNewsList().get(i).getCategory().toLowerCase().contains("interurbanos") ||
                             newsList.getNewsList().get(i).getCategory().toLowerCase().contains("general")){
-                        //news[i] = newsList.getNewsList().get(i);
                         newsArrayList.add(newsList.getNewsList().get(i));
                     }
                 }

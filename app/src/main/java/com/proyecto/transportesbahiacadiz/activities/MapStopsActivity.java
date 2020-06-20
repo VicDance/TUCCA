@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -13,13 +11,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.proyecto.transportesbahiacadiz.R;
-import com.proyecto.transportesbahiacadiz.adapters.TimeStopAdapter;
-import com.proyecto.transportesbahiacadiz.model.TimeStopsItem;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import com.proyecto.transportesbahiacadiz.R;
 
 public class MapStopsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private String latitud;
@@ -34,9 +27,6 @@ public class MapStopsActivity extends AppCompatActivity implements OnMapReadyCal
         String direccion = intent.getStringExtra("direccion");
         latitud = direccion.split("/")[0];
         longitud = direccion.split("/")[1];
-
-        System.out.println("Latitud: " + latitud);
-        System.out.println("Longitud: " + longitud);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_stops);
         mapFragment.getMapAsync(this);
